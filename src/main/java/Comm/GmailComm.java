@@ -1,5 +1,6 @@
 package Comm;
 
+import Util.Config;
 import Util.IOUtil;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -61,7 +62,7 @@ public class GmailComm {
         try {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
-            TARGET_EMAIL = IOUtil.getConfig().getString("targetEmail");
+            TARGET_EMAIL = Config.getTargetEmail();
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);

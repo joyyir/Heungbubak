@@ -1,12 +1,13 @@
 package Comm.apikey;
 
+import Util.Config;
 import Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
 public class CoinoneApiKey implements ApiKey {
-    private static final String APIKEY_PATH = "/Users/1003880/IdeaProjects/Heungbubak/src/main/resources/apiKeyCoinone.json";
+    private static final String APIKEY_PATH = Config.getApikeyPathCoinone();
 
     @Getter @Setter
     private JSONObject apikey;

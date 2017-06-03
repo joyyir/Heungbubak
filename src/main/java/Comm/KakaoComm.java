@@ -1,5 +1,6 @@
 package Comm;
 
+import Util.Config;
 import Util.HTTPUtil;
 import Util.IOUtil;
 import org.json.JSONObject;
@@ -16,7 +17,7 @@ public class KakaoComm {
 
     private void dummy() {
         try {
-            String apiKey = (String) ((JSONObject)IOUtil.getConfig("kakaoAPI")).get("restApiKey");
+            String apiKey = Config.getKakaoApi().getString("restApiKey");
             String url = AUTH_URL + "oauth/authorize?client_id=" + apiKey + "&redirect_uri=" + "http://localhost/" + "&response_type=code";
             String result = HTTPUtil.requestGet(url, "*");
             System.out.println("result: " + result);
@@ -28,7 +29,7 @@ public class KakaoComm {
     }
 
     public JSONObject getUserToken(String authCode) throws Exception {
-        String apiKey = (String) ((JSONObject)IOUtil.getConfig("kakaoAPI")).get("restApiKey");
+        String apiKey = Config.getKakaoApi().getString("restApiKey");
 
         Map<String, String> params = new HashMap<>();
         params.put("grant_type", "authorization_code");
@@ -45,8 +46,7 @@ public class KakaoComm {
     // TODO : 토큰 갱신 로직 추가
 
     public String getAccessToken() throws Exception {
-        JSONObject config = IOUtil.getConfig();
-        JSONObject kakaoJson = IOUtil.readJson((String)config.get("jsonPath") + config.get("kakaoJson"));
+        JSONObject kakaoJson = IOUtil.readJson(Config.getApikeyPathKakao());
         return (String) kakaoJson.get("access_token");
     }
 

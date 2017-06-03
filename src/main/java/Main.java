@@ -2,6 +2,7 @@ import Comm.CoinoneComm;
 import Comm.GmailComm;
 import Comm.KakaoComm;
 import Comm.PoloniexComm;
+import Util.Config;
 import Util.IOUtil;
 import org.json.JSONObject;
 
@@ -18,7 +19,7 @@ public class Main {
             CoinoneComm coinone = new CoinoneComm();
             PoloniexComm poloniex = new PoloniexComm();
             KakaoComm kakao = new KakaoComm();
-            JSONObject paperWallet = IOUtil.getConfig().getJSONObject("paperWallet");
+            JSONObject paperWallet = Config.getPaperWallet();
             boolean isFirst = true;
             while (true) {
                 try {

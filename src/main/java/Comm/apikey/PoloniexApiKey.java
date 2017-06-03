@@ -1,12 +1,13 @@
 package Comm.apikey;
 
+import Util.Config;
 import Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
 public class PoloniexApiKey implements ApiKey {
-    private static final String APIKEY_PATH = "/Users/1003880/IdeaProjects/Heungbubak/src/main/resources/apiKeyPoloniex.json";
+    private static final String APIKEY_PATH = Config.getApikeyPathPoloniex();
 
     @Getter @Setter
     private JSONObject apikey;
