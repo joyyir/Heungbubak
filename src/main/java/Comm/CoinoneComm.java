@@ -23,6 +23,7 @@ public class CoinoneComm {
     public static final String COIN_ETH = "eth";
     public static final String COIN_ETC = "etc";
     public static final String COIN_KRW = "krw";
+    public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETC, COIN_ETH };
 
     @Setter @Getter
     private CoinoneApiKey apikey;

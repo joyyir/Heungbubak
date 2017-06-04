@@ -3,7 +3,6 @@ package Comm;
 import Comm.apikey.PoloniexApiKey;
 import Util.Encryptor;
 import Util.HTTPUtil;
-import Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
@@ -22,6 +21,7 @@ public class PoloniexComm {
     public static final String COIN_XRP = "XRP";
     public static final String COIN_USDT = "USDT";
     public static final String COIN_STR = "STR";
+    public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETH, COIN_ETC, COIN_XRP, COIN_STR };
 
     @Getter @Setter
     private PoloniexApiKey apikey;

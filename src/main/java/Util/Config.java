@@ -2,6 +2,7 @@ package Util;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Config {
@@ -50,5 +51,9 @@ public class Config {
 
     public static String getTargetEmail() {
         return getConfig().getString("targetEmail");
+    }
+
+    public static JSONArray getPreviousPrice() {
+        return getConfig().getJSONArray("previousPrice");
     }
 }
