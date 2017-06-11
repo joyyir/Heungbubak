@@ -56,4 +56,8 @@ public class Config {
     public static JSONArray getPreviousPrice() {
         return getConfig().getJSONArray("previousPrice");
     }
+
+    public static long getInvestment() {
+        return getConfig().getLong("investment");
+    }
 }
