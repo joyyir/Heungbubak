@@ -9,15 +9,13 @@ import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 public class CoinoneComm {
     private final String API_URL = "https://api.coinone.co.kr/";
     private final String TICKER_URL = "ticker?currency=";
     private final String BALANCE_URL = "v2/account/balance/";
+    private final String TRANSACTION_URL = "v2/transaction/";
 
     public static final String COIN_BTC = "btc";
     public static final String COIN_ETH = "eth";
@@ -28,8 +26,13 @@ public class CoinoneComm {
     @Setter @Getter
     private CoinoneApiKey apikey;
 
+    private String accessToken;
+    private String secret;
+
     public CoinoneComm() throws Exception {
         setApikey(new CoinoneApiKey());
+        accessToken = getApikey().getAccessToken();
+        secret = getApikey().getSecret();
     }
 
     public int getMarketPrice(String coin) throws Exception {
@@ -40,7 +43,7 @@ public class CoinoneComm {
     public double getBalance(String coin) throws Exception {
         String accessToken = getApikey().getAccessToken();
         String secret = getApikey().getSecret();
-        int nonce = getApikey().getIncreasedNonce();
+        long nonce = getApikey().getIncreasedNonce();
 
         String url = API_URL + BALANCE_URL;
 
@@ -70,16 +73,90 @@ public class CoinoneComm {
                 + (long) getBalance(COIN_KRW);
     }
 
+    public void twoFactorAuth(String type) throws Exception {
+        String url = API_URL + TRANSACTION_URL + "auth_number/";
+        long nonce = getApikey().getIncreasedNonce();
+
+        JSONObject params = new JSONObject();
+        params.put("access_token", accessToken);
+        params.put("type", type.toLowerCase());
+        params.put("nonce", nonce);
+
+        String payload = Base64.encodeBase64String(params.toString().getBytes());
+        String signature = Encryptor.getHmacSha512(secret.toUpperCase(), payload).toLowerCase();
+
+        Map<String, String> map = new HashMap<>();
+        map.put("content-type", "application/json");
+        map.put("accept", "application/json");
+        map.put("X-COINONE-PAYLOAD", payload);
+        map.put("X-COINONE-SIGNATURE", signature);
+
+        JSONObject result = HTTPUtil.getJSONfromPost(url, map, payload);
+        if(!"success".equals(result.getString("result")))
+            throw new Exception(errorDescription(result.getString("errorCode")));
+        else
+            System.out.println("2-Factor 인증 성공! (type:" + type + ")");
+    }
+
+    public void sendBTC(String toAddress, double quantity, int authNumber, String walletType, String fromAddress) throws Exception {
+        long nonce = getApikey().getIncreasedNonce();
+        String url = API_URL + TRANSACTION_URL + "btc/";
+
+        JSONObject params = new JSONObject();
+        params.put("access_token", accessToken);
+        params.put("address", toAddress);
+        params.put("auth_number", authNumber); // 2-Factor Authentication number. (int)
+        params.put("qty", quantity);
+        params.put("type", walletType); // Type of wallet. 'trade' or 'normal'
+        params.put("from_address", fromAddress);
+        params.put("nonce", nonce);
+
+        String payload = Base64.encodeBase64String(params.toString().getBytes());
+        String signature = Encryptor.getHmacSha512(secret.toUpperCase(), payload).toLowerCase();
+
+        Map<String, String> map = new HashMap<>();
+        map.put("content-type", "application/json");
+        map.put("accept", "application/json");
+        map.put("X-COINONE-PAYLOAD", payload);
+        map.put("X-COINONE-SIGNATURE", signature);
+
+        JSONObject result = HTTPUtil.getJSONfromPost(url, map, payload);
+        if(!"success".equals(result.getString("result")))
+            throw new Exception(errorDescription(result.getString("errorCode")));
+        else
+            System.out.println("송금 성공!");
+    }
+
+    public String errorDescription(String errorCode) {
+        String desc;
+
+        switch (errorCode) {
+            case "40":
+                desc = "Invalid API permission";
+                break;
+            case "777":
+                desc = "Mobile auth error";
+                break;
+            case "103":
+                desc = "Lack of Balance";
+                break;
+            default:
+                desc = "unknown error";
+                break;
+        }
+
+        return desc;
+    }
+
     public static void main(String[] args) {
         try {
             CoinoneComm comm = new CoinoneComm();
-            int btcPrice = comm.getMarketPrice(CoinoneComm.COIN_BTC);
-            int ethPrice = comm.getMarketPrice(CoinoneComm.COIN_ETH);
-            int etcPrice = comm.getMarketPrice(CoinoneComm.COIN_ETC);
-
-            double ethBalance = comm.getBalance(CoinoneComm.COIN_ETH);
-            long totalBal = comm.getCompleteBalance();
-            System.out.println(totalBal);
+            int authNumber;
+            comm.twoFactorAuth(CoinoneComm.COIN_BTC);
+            System.out.print("Coinone OTP 번호를 입력하세요 : ");
+            Scanner sc = new Scanner(System.in);
+            authNumber = sc.nextInt();
+            comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
         }
         catch(Exception e) {
             e.printStackTrace();

@@ -6,13 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
-public class CoinoneApiKey implements ApiKey {
-    private static final String APIKEY_PATH = Config.getApikeyPathCoinone();
+public class BithumbApiKey implements ApiKey {
+    private static final String APIKEY_PATH = Config.getApikeyPathBithumb();
 
     @Getter @Setter
     private JSONObject apikey;
 
-    public CoinoneApiKey() throws Exception {
+    public BithumbApiKey() throws Exception {
         readApiKey(APIKEY_PATH);
     }
 
@@ -26,16 +26,14 @@ public class CoinoneApiKey implements ApiKey {
         IOUtil.writeJson(path, getApikey());
     }
 
+    public String getKey() { return (String) getApikey().get("connect"); }
+
     public long getNonce() {
-        return getApikey().getLong("nonce");
+        return (long) getApikey().get("nonce");
     }
 
     public void setNonce(long nonce) {
         getApikey().put("nonce", nonce);
-    }
-
-    public String getAccessToken() {
-        return (String) getApikey().get("access_token");
     }
 
     public String getSecret() {

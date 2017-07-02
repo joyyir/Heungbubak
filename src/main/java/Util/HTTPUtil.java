@@ -9,8 +9,10 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -115,12 +117,32 @@ public class HTTPUtil {
         return builder.toString();
     }
 
+    public static String encodeURIComponent(String s) {
+        String result;
+
+        try {
+            result = URLEncoder.encode(s, "UTF-8")
+                    .replaceAll("\\+", "%20")
+                    .replaceAll("\\%21", "!")
+                    .replaceAll("\\%27", "'")
+                    .replaceAll("\\%28", "(")
+                    .replaceAll("\\%29", ")")
+                    .replaceAll("\\%26", "&")
+                    .replaceAll("\\%3D", "=")
+                    .replaceAll("\\%7E", "~");
+        }
+        catch (UnsupportedEncodingException e) {
+            result = s;
+        }
+
+        return result;
+    }
+
     public static void main(String[] args) {
         try {
-            Map<String, String> map = new HashMap<>();
-            map.put("name", "junyeong");
-            map.put("age", "26");
-            System.out.println(paramsBuilder(map));
+            for(int i = 0; i < 1000; i++) {
+                System.out.println(CmnUtil.nsTime());
+            }
         }
         catch(Exception e) {
             e.printStackTrace();

@@ -37,6 +37,10 @@ public class Config {
         return getConfig().getString("apikeyPathPoloniex");
     }
 
+    public static String getApikeyPathBithumb() {
+        return getConfig().getString("apikeyPathBithumb");
+    }
+
     public static String getApikeyPathKakao() {
         return getConfig().getString("apikeyPathKakao");
     }
