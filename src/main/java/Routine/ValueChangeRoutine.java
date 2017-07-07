@@ -2,7 +2,6 @@ package Routine;
 
 import Comm.CoinoneComm;
 import Comm.EmailSender;
-import Comm.GmailComm;
 import Comm.PoloniexComm;
 import Util.Config;
 import lombok.Setter;
@@ -23,7 +22,6 @@ public class ValueChangeRoutine implements Routine {
     @Setter
     private EmailSender emailSender = null;
 
-    public ValueChangeRoutine() throws Exception { }
     public ValueChangeRoutine(EmailSender emailSender) throws Exception {
         this.emailSender = emailSender;
     }

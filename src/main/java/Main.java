@@ -2,6 +2,7 @@ import Comm.EmailSender;
 import Routine.PriceChangeRoutine;
 import Routine.Routine;
 import Routine.ValueChangeRoutine;
+import Routine.ArbitrageRoutine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class Main {
 
             routineList.add(new ValueChangeRoutine(sender));
             routineList.add(new PriceChangeRoutine(sender));
+            routineList.add(new ArbitrageRoutine(sender));
 
             while (true) {
                 Thread.sleep(timeInterval);
