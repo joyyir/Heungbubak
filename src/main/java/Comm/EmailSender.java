@@ -15,7 +15,6 @@ public class EmailSender {
     @Getter @Setter
     private boolean isReady = true;
 
-    public EmailSender() { }
     public EmailSender(String subject) {
         if(subject != null)
             this.subject = subject;

@@ -23,6 +23,8 @@ public class CoinoneComm {
     public static final String COIN_KRW = "krw";
     public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETC, COIN_ETH };
 
+    public enum OrderType { BUY, SELL }
+
     @Setter @Getter
     private CoinoneApiKey apikey;
 
@@ -41,8 +43,6 @@ public class CoinoneComm {
     }
 
     public double getBalance(String coin) throws Exception {
-        String accessToken = getApikey().getAccessToken();
-        String secret = getApikey().getSecret();
         long nonce = getApikey().getIncreasedNonce();
 
         String url = API_URL + BALANCE_URL;
@@ -51,6 +51,13 @@ public class CoinoneComm {
         params.put("nonce", nonce);
         params.put("access_token", accessToken);
 
+        JSONObject result = callPrivateApi(url, params);
+        String strBalance = result.getJSONObject(coin).getString("avail");
+
+        return Double.valueOf(strBalance);
+    }
+
+    private JSONObject callPrivateApi(String url, JSONObject params) throws Exception {
         String payload = Base64.encodeBase64String(params.toString().getBytes());
         String signature = Encryptor.getHmacSha512(secret.toUpperCase(), payload).toLowerCase();
 
@@ -60,10 +67,7 @@ public class CoinoneComm {
         map.put("X-COINONE-PAYLOAD", payload);
         map.put("X-COINONE-SIGNATURE", signature);
 
-        JSONObject result = HTTPUtil.getJSONfromPost(url, map, payload);
-        String strBalance = result.getJSONObject(coin).getString("avail");
-
-        return Double.valueOf(strBalance);
+        return HTTPUtil.getJSONfromPost(url, map, payload);
     }
 
     public long getCompleteBalance() throws Exception {
@@ -82,16 +86,7 @@ public class CoinoneComm {
         params.put("type", type.toLowerCase());
         params.put("nonce", nonce);
 
-        String payload = Base64.encodeBase64String(params.toString().getBytes());
-        String signature = Encryptor.getHmacSha512(secret.toUpperCase(), payload).toLowerCase();
-
-        Map<String, String> map = new HashMap<>();
-        map.put("content-type", "application/json");
-        map.put("accept", "application/json");
-        map.put("X-COINONE-PAYLOAD", payload);
-        map.put("X-COINONE-SIGNATURE", signature);
-
-        JSONObject result = HTTPUtil.getJSONfromPost(url, map, payload);
+        JSONObject result = callPrivateApi(url, params);
         if(!"success".equals(result.getString("result")))
             throw new Exception(errorDescription(result.getString("errorCode")));
         else
@@ -111,16 +106,7 @@ public class CoinoneComm {
         params.put("from_address", fromAddress);
         params.put("nonce", nonce);
 
-        String payload = Base64.encodeBase64String(params.toString().getBytes());
-        String signature = Encryptor.getHmacSha512(secret.toUpperCase(), payload).toLowerCase();
-
-        Map<String, String> map = new HashMap<>();
-        map.put("content-type", "application/json");
-        map.put("accept", "application/json");
-        map.put("X-COINONE-PAYLOAD", payload);
-        map.put("X-COINONE-SIGNATURE", signature);
-
-        JSONObject result = HTTPUtil.getJSONfromPost(url, map, payload);
+        JSONObject result = callPrivateApi(url, params);
         if(!"success".equals(result.getString("result")))
             throw new Exception(errorDescription(result.getString("errorCode")));
         else
@@ -148,15 +134,44 @@ public class CoinoneComm {
         return desc;
     }
 
+    public void makeOrder(OrderType orderType, String coin, long price, double quantity) throws Exception {
+        long nonce = getApikey().getIncreasedNonce();
+        String url = "";
+        if(orderType == OrderType.BUY)
+            url = "v2/order/limit_buy/";
+        else if(orderType == OrderType.SELL)
+            url = "v2/order/limit_sell/";
+        else
+            new Exception("Undefined OrderType");
+
+        url = API_URL + url;
+
+        JSONObject params = new JSONObject();
+        params.put("access_token", accessToken);
+        params.put("price", price);
+        params.put("qty", quantity);
+        params.put("currency", coin.toLowerCase());
+        params.put("nonce", nonce);
+
+        JSONObject result = callPrivateApi(url, params);
+        if(!"success".equals(result.getString("result")))
+            throw new Exception(errorDescription(result.getString("errorCode")));
+        else
+            System.out.println("Success!");
+    }
+
     public static void main(String[] args) {
         try {
             CoinoneComm comm = new CoinoneComm();
+            /*
             int authNumber;
             comm.twoFactorAuth(CoinoneComm.COIN_BTC);
             System.out.print("Coinone OTP 번호를 입력하세요 : ");
             Scanner sc = new Scanner(System.in);
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
+            */
+            comm.makeOrder(OrderType.BUY, COIN_ETC, 19790, 0.05);
         }
         catch(Exception e) {
             e.printStackTrace();

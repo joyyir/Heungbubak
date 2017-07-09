@@ -5,6 +5,8 @@ import Comm.CoinoneComm;
 import Comm.EmailSender;
 import lombok.Setter;
 
+import java.util.Scanner;
+
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 3000;
@@ -69,6 +71,59 @@ public class ArbitrageRoutine implements Routine{
             } else if (bithumbPrice - coinonePrice >= MIN_DIFF_BTC) {
                 // 빗썸에서 비싸게 팔고, 코인원에서 싸게 산다.
             }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            BithumbComm bithumb = new BithumbComm();
+            CoinoneComm coinone = new CoinoneComm();
+
+            // step 1. 시세 확인
+            long bithumbPrice, coinonePrice;
+            bithumbPrice = bithumb.getMarketPrice(BithumbComm.COIN_BTC, BithumbComm.PriceType.BUY);
+            coinonePrice = coinone.getMarketPrice(CoinoneComm.COIN_BTC);
+
+            System.out.printf("step 1. 시세\n");
+            System.out.printf("\tbithumb(%d) coinone(%d) diff(%d)\n", bithumbPrice, coinonePrice, Math.abs(bithumbPrice-coinonePrice));
+
+            // step 2. 거래 가능액 보유 여부 확인
+            double bithumbKRW, bithumbBTC;
+            double coinoneKRW, coinoneBTC;
+            bithumbKRW = bithumb.getBalance(BithumbComm.COIN_KRW);
+            bithumbBTC = bithumb.getBalance(BithumbComm.COIN_BTC);
+            coinoneKRW = coinone.getBalance(CoinoneComm.COIN_KRW);
+            coinoneBTC = coinone.getBalance(CoinoneComm.COIN_BTC);
+
+            System.out.printf("\nstep 2. 보유액\n");
+            System.out.printf("\tbithumb: KRW(%f) BTC(%f)\n", bithumbKRW, bithumbBTC);
+            System.out.printf("\tcoinone: KRW(%f) BTC(%f)\n", coinoneKRW, coinoneBTC);
+
+            // step 3. 거래 개수
+            // step 3-1. 빗썸에서 팔고 코인원에서 구매
+            System.out.printf("\nstep 3. 거래 개수\n");
+            System.out.printf("\tstep 3-1. 빗썸에서 팔고 코인원에서 구매\n");
+            System.out.printf("\t\t빗썸에서 팔 수 있는 개수: %f\n", bithumbBTC);
+            System.out.printf("\t\t코인원에서 살 수 있는 개수: %f\n", coinoneKRW/coinonePrice);
+            System.out.printf("\t\t최종 거래할 수 있는 개수: %f\n", Math.min(bithumbBTC, coinoneKRW/coinonePrice));
+            System.out.printf("\tstep 3-2. 코인원에서 팔고 빗썸에서 구매\n");
+            System.out.printf("\t\t코인원에서 팔 수 있는 개수: %f\n", coinoneBTC);
+            System.out.printf("\t\t빗썸에서 살 수 있는 개수: %f\n", bithumbKRW/bithumbPrice);
+            System.out.printf("\t\t최종 거래할 수 있는 개수: %f\n", Math.min(coinoneBTC, bithumbKRW/bithumbPrice));
+
+            // step 4. 거래 승인
+            System.out.printf("\nstep 4. 거래 승인\n");
+            System.out.printf("\t거래를 진행하려 합니다. 동의하십니까?(y/n) : ");
+            Scanner sc = new Scanner(System.in);
+            String userInput = sc.nextLine();
+            if(!userInput.toUpperCase().equals("Y"))
+                return;
+
+            // step 5. 판매
+
         }
         catch (Exception e) {
             e.printStackTrace();
