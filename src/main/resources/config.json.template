@@ -1,0 +1,32 @@
+{
+  "apikeyPathCoinone" : "/Users/IdeaProjects/Heungbubak/src/main/resources/apiKeyCoinone.json",
+  "apikeyPathPoloniex" : "/Users/IdeaProjects/Heungbubak/src/main/resources/apiKeyPoloniex.json",
+  "apikeyPathBithumb" : "/Users/IdeaProjects/Heungbubak/src/main/resources/apiKeyBithumb.json",
+  "targetEmail" : "abcdef@gmail.com",
+  "paperWallet" : {
+    "STR" : 40000
+  },
+  "investment" : 4000000,
+  "previousPrice" : [
+    {
+      "coin" : "XRP",
+      "unit" : "USDT",
+      "price" : 0.2528
+    },
+    {
+      "coin" : "ETH",
+      "unit" : "KRW",
+      "price" : 440000
+    },
+    {
+      "coin" : "ETC",
+      "unit" : "KRW",
+      "price" : 25000
+    },
+    {
+      "coin" : "STR",
+      "unit" : "USDT",
+      "price" : 0.018225
+    }
+  ]
+}
