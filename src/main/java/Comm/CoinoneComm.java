@@ -1,6 +1,7 @@
 package Comm;
 
 import Comm.apikey.CoinoneApiKey;
+import Util.Config;
 import Util.Encryptor;
 import Util.HTTPUtil;
 import Util.IOUtil;
@@ -87,10 +88,7 @@ public class CoinoneComm {
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
-        if(!"success".equals(result.getString("result")))
-            throw new Exception(errorDescription(result.getString("errorCode")));
-        else
-            System.out.println("2-Factor 인증 성공! (type:" + type + ")");
+        errorCheck(result);
     }
 
     public void sendBTC(String toAddress, double quantity, int authNumber, String walletType, String fromAddress) throws Exception {
@@ -107,10 +105,7 @@ public class CoinoneComm {
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
-        if(!"success".equals(result.getString("result")))
-            throw new Exception(errorDescription(result.getString("errorCode")));
-        else
-            System.out.println("송금 성공!");
+        errorCheck(result);
     }
 
     public String errorDescription(String errorCode) {
@@ -127,14 +122,14 @@ public class CoinoneComm {
                 desc = "Lack of Balance";
                 break;
             default:
-                desc = "unknown error";
+                desc = errorCode;
                 break;
         }
 
         return desc;
     }
 
-    public void makeOrder(OrderType orderType, String coin, long price, double quantity) throws Exception {
+    public String makeOrder(OrderType orderType, String coin, long price, double quantity) throws Exception {
         long nonce = getApikey().getIncreasedNonce();
         String url = "";
         if(orderType == OrderType.BUY)
@@ -142,7 +137,7 @@ public class CoinoneComm {
         else if(orderType == OrderType.SELL)
             url = "v2/order/limit_sell/";
         else
-            new Exception("Undefined OrderType");
+            throw new Exception("Undefined OrderType");
 
         url = API_URL + url;
 
@@ -154,10 +149,52 @@ public class CoinoneComm {
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
+        errorCheck(result);
+        return result.getString("orderId");
+    }
+
+    public boolean isOrderComplete(String orderId, String coin) throws Exception {
+        JSONObject result = getOrderInfo(orderId, coin);
+        String status = result.getString("status"); // live, filled, partially_filled
+        return status.equals("filled");
+    }
+
+    public void cancelOrder(String orderId, int krwPrice, double quantity, boolean isSell, String coin) throws Exception {
+        long nonce = getApikey().getIncreasedNonce();
+        String url = API_URL + "v2/order/cancel/";
+
+        JSONObject params = new JSONObject();
+        params.put("access_token", accessToken);
+        params.put("order_id", orderId);
+        params.put("price", krwPrice);
+        params.put("qty", quantity);
+        int isAsk = isSell ? 1 : 0;
+        params.put("is_ask", isAsk);
+        params.put("currency", coin.toLowerCase());
+        params.put("nonce", nonce);
+
+        JSONObject result = callPrivateApi(url, params);
+        errorCheck(result);
+    }
+
+    public JSONObject getOrderInfo(String orderId, String coin) throws Exception {
+        long nonce = getApikey().getIncreasedNonce();
+        String url = API_URL + "v2/order/order_info/";
+
+        JSONObject params = new JSONObject();
+        params.put("access_token", accessToken);
+        params.put("order_id", orderId);
+        params.put("currency", coin.toLowerCase());
+        params.put("nonce", nonce);
+
+        JSONObject result = callPrivateApi(url, params);
+        errorCheck(result);
+        return result;
+    }
+
+    private void errorCheck(JSONObject result) throws Exception {
         if(!"success".equals(result.getString("result")))
             throw new Exception(errorDescription(result.getString("errorCode")));
-        else
-            System.out.println("Success!");
     }
 
     public static void main(String[] args) {
@@ -171,7 +208,9 @@ public class CoinoneComm {
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
             */
-            comm.makeOrder(OrderType.BUY, COIN_ETC, 19790, 0.05);
+            String orderId = comm.makeOrder(OrderType.SELL, COIN_ETC, 1000000, 0.05);
+            System.out.println(comm.isOrderComplete(orderId, COIN_ETC));
+            comm.cancelOrder(orderId, 1000000, 0.05, true, COIN_ETC);
         }
         catch(Exception e) {
             e.printStackTrace();

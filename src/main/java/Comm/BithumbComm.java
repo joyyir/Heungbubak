@@ -25,7 +25,17 @@ public class BithumbComm {
     public static final String STATUS_CODE_CUSTOM = "5600";
 
     public enum PriceType { BUY, SELL }
-    public enum OrderType { BUY, SELL }
+    public enum OrderType {
+        BUY("bid"), SELL("ask");
+
+        private String type;
+        OrderType(String type) { this.type = type; }
+
+        @Override
+        public String toString() {
+            return type;
+        }
+    }
     public enum BankCode {
         SHINHAN("088");
 
@@ -100,27 +110,20 @@ public class BithumbComm {
         errorCheck(result, "Sending coin");
     }
 
-    public void makeOrder(OrderType orderType, String coin, Long price, Float quantity) throws Exception {
+    public String makeOrder(OrderType orderType, String coin, Long price, Float quantity) throws Exception {
         final String endpoint = "trade/place";
         Map<String, String> params = new HashMap<>();
         params.put("order_currency", coin.toUpperCase());
         params.put("Payment_currency", "KRW");
         params.put("units", quantity.toString());
         params.put("price", price.toString());
-        String type = "";
-        if(orderType.equals(OrderType.BUY))
-            type = "bid";
-        else if(orderType.equals(OrderType.SELL))
-            type = "ask";
-        else
-            new Exception("Undefined OrderType");
-        params.put("type", type);
+        params.put("type", orderType.toString());
 
         JSONObject result = callApi(endpoint, params);
 
         //System.out.println(result.toString());
         errorCheck(result, "Making order");
-        //String orderId = result.getString("order_id");
+        return result.getString("order_id");
     }
 
     // 바로 되는게 아니다.
@@ -136,6 +139,46 @@ public class BithumbComm {
 
         //System.out.println(result.toString());
         errorCheck(result, "Withdrawal KRW");
+    }
+
+    public boolean isOrderCompleted(String orderId, OrderType orderType, String coin) throws Exception {
+        try {
+            JSONObject result = getOrderInfo(orderId, orderType, coin, true);
+            return (result != null);
+        }
+        catch (Exception e) {
+            try {
+                JSONObject result = getOrderInfo(orderId, orderType, coin, false);
+                return (result == null);
+            }
+            catch (Exception e2) {
+                throw e2;
+            }
+        }
+    }
+
+    public JSONObject getOrderInfo(String orderId, OrderType orderType, String coin, boolean finished) throws Exception {
+        final String endpoint = finished ? "info/order_detail" : "info/orders";
+
+        Map<String, String> params = new HashMap<>();
+        params.put("order_id", orderId);
+        params.put("type", orderType.toString());
+        params.put("currency", coin.toUpperCase());
+
+        JSONObject result = callApi(endpoint, params);
+        errorCheck(result, "getOrderInfo");
+        return result;
+    }
+
+    public void cancelOrder(String orderId, OrderType orderType, String coin) throws Exception {
+        final String endpoint = "trade/cancel";
+        Map<String, String> params = new HashMap<>();
+        params.put("type", orderType.toString());
+        params.put("order_id", orderId);
+        params.put("currency", coin.toUpperCase());
+
+        JSONObject result = callApi(endpoint, params);
+        errorCheck(result, "Cancel order");
     }
 
     private JSONObject callApi(String endpoint, Map<String, String> params) throws Exception {
@@ -202,7 +245,15 @@ public class BithumbComm {
             //comm.makeOrder(OrderType.BUY, COIN_ETC, 19570L, 0.1F);
             //comm.makeOrder(OrderType.SELL, COIN_ETC, 19450L, 0.0998F);
 
-            comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
+            //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
+
+            //String orderId = comm.makeOrder(OrderType.BUY, COIN_ETC, 10000L, 1F);
+            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, COIN_ETC));
+            //comm.getOrderInfo(orderId, OrderType.BUY, COIN_ETC, false);
+            //comm.cancelOrder(orderId, OrderType.BUY, COIN_ETC);
+
+            //comm.getOrderInfo("1499599864512", OrderType.SELL, COIN_ETC, true);
+            System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, COIN_ETC));
         }
         catch (Exception e) {
             e.printStackTrace();
