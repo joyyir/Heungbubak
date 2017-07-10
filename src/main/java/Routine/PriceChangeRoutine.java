@@ -51,7 +51,7 @@ public class PriceChangeRoutine implements Routine {
 
                 if(isCoinonePriceAvail(coin, unit)) {
                     int price = obj.getInt("price");
-                    int coinPrice = coinone.getMarketPrice(coin);
+                    int coinPrice = coinone.getLastMarketPrice(coin);
                     int percent = (int)(coinPrice / (double)price * 100);
                     sb.append("[" + coin + ": " + coinPrice + " " + unit + " (" + percent + "%)]    ");
                     sbMail.append(coin + ": " + coinPrice + " " + unit + " (" + percent + "%)\n");

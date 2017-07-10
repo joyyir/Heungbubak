@@ -35,7 +35,7 @@ public class ValueChangeRoutine implements Routine {
             long coinoneBal = coinone.getCompleteBalance();
             double poloBal = poloniex.getCompleteBalance();
             double walletBal = poloniex.getMarketPrice(PoloniexComm.COIN_BTC, PoloniexComm.COIN_STR) * paperWallet.getDouble(PoloniexComm.COIN_STR);
-            double btcPrice = coinone.getMarketPrice(CoinoneComm.COIN_BTC);
+            double btcPrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
             long totalWon = coinoneBal + (long) ((poloBal + walletBal) * btcPrice);
             int increaseRate = (int)((double)totalWon / Config.getInvestment() * 100);
 

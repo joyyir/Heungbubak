@@ -8,6 +8,7 @@ import Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -24,6 +25,17 @@ public class CoinoneComm {
     public static final String COIN_KRW = "krw";
     public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETC, COIN_ETH };
 
+    public enum PriceType {
+        BUY("bid"), SELL("ask");
+
+        private String type;
+        PriceType(String type) { this.type = type; }
+
+        @Override
+        public String toString() {
+            return type;
+        }
+    }
     public enum OrderType { BUY, SELL }
 
     @Setter @Getter
@@ -38,9 +50,39 @@ public class CoinoneComm {
         secret = getApikey().getSecret();
     }
 
-    public int getMarketPrice(String coin) throws Exception {
+    public int getLastMarketPrice(String coin) throws Exception {
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin);
         return Integer.valueOf(jsonObject.getString("last"));
+    }
+
+    public int getAverageMarketPrice(String coin, PriceType priceType, double quantity) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.toLowerCase());
+        JSONArray orders = jsonObject.getJSONArray(priceType.toString());
+        double sum = 0.0;
+        double left = quantity;
+        for(int i = 0; i < orders.length(); i++) {
+            JSONObject order = orders.getJSONObject(i);
+            int price = order.getInt("price");
+            double qty = order.getDouble("qty");
+
+            if(qty > left) {
+                sum += price * left;
+                left = 0.0;
+                break;
+            }
+            else {
+                sum += price * qty;
+                left -= qty;
+            }
+        }
+        if(left > 0.0)
+            throw new Exception("Too much quantity");
+        return (int)(sum/quantity);
+    }
+
+    public int getMarketPrice(String coin, PriceType priceType) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.toLowerCase());
+        return jsonObject.getJSONArray(priceType.toString()).getJSONObject(0).getInt("price");
     }
 
     public double getBalance(String coin) throws Exception {
@@ -72,9 +114,9 @@ public class CoinoneComm {
     }
 
     public long getCompleteBalance() throws Exception {
-        return (long) (getMarketPrice(COIN_BTC) * getBalance(COIN_BTC))
-                + (long) (getMarketPrice(COIN_ETH) * getBalance(COIN_ETH))
-                + (long) (getMarketPrice(COIN_ETC) * getBalance(COIN_ETC))
+        return (long) (getLastMarketPrice(COIN_BTC) * getBalance(COIN_BTC))
+                + (long) (getLastMarketPrice(COIN_ETH) * getBalance(COIN_ETH))
+                + (long) (getLastMarketPrice(COIN_ETC) * getBalance(COIN_ETC))
                 + (long) getBalance(COIN_KRW);
     }
 
@@ -208,9 +250,21 @@ public class CoinoneComm {
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
             */
+            /*
             String orderId = comm.makeOrder(OrderType.SELL, COIN_ETC, 1000000, 0.05);
             System.out.println(comm.isOrderComplete(orderId, COIN_ETC));
             comm.cancelOrder(orderId, 1000000, 0.05, true, COIN_ETC);
+            */
+
+            //comm.getMarketPrice(COIN_BTC, PriceType.BUY);
+
+            System.out.println("1개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 1.0));
+            System.out.println("10개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 10.0));
+            System.out.println("10000개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 10000.0));
+            System.out.println("1개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 1.0));
+            System.out.println("10개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 10.0));
+            System.out.println("10000개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 10000.0));
+
         }
         catch(Exception e) {
             e.printStackTrace();

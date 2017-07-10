@@ -36,7 +36,7 @@ public class ArbitrageRoutine implements Routine{
             // 시세와 개수 가져옴
             long coinoneAmount = 0, bithumbAmount = 0;
             long bithumbPrice = bithumb.getMarketPrice(BithumbComm.COIN_BTC, BithumbComm.PriceType.BUY);
-            long coinonePrice = coinone.getMarketPrice(CoinoneComm.COIN_BTC);
+            long coinonePrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
 
             if(isTiming) { // 한번 알림 후에는 60초동안 다시 알림을 주지 않는다.
                 timingCount++;
@@ -85,7 +85,7 @@ public class ArbitrageRoutine implements Routine{
             // step 1. 시세 확인
             long bithumbPrice, coinonePrice;
             bithumbPrice = bithumb.getMarketPrice(BithumbComm.COIN_BTC, BithumbComm.PriceType.BUY);
-            coinonePrice = coinone.getMarketPrice(CoinoneComm.COIN_BTC);
+            coinonePrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
 
             System.out.printf("step 1. 시세\n");
             System.out.printf("\tbithumb(%d) coinone(%d) diff(%d)\n", bithumbPrice, coinonePrice, Math.abs(bithumbPrice-coinonePrice));
