@@ -26,10 +26,12 @@ public class CoinoneApiKey implements ApiKey {
         IOUtil.writeJson(path, getApikey());
     }
 
+    @Deprecated
     public long getNonce() {
         return getApikey().getLong("nonce");
     }
 
+    @Deprecated
     public void setNonce(long nonce) {
         getApikey().put("nonce", nonce);
     }
@@ -42,6 +44,7 @@ public class CoinoneApiKey implements ApiKey {
         return (String) getApikey().get("secret");
     }
 
+    @Deprecated
     public long getIncreasedNonce() throws Exception {
         long nonce = getNonce() + 1;
         setNonce(nonce);

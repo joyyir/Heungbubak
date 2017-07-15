@@ -1,10 +1,7 @@
 package Comm;
 
 import Comm.apikey.CoinoneApiKey;
-import Util.Config;
-import Util.Encryptor;
-import Util.HTTPUtil;
-import Util.IOUtil;
+import Util.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
@@ -40,7 +37,6 @@ public class CoinoneComm {
 
     @Setter @Getter
     private CoinoneApiKey apikey;
-
     private String accessToken;
     private String secret;
 
@@ -86,8 +82,7 @@ public class CoinoneComm {
     }
 
     public double getBalance(String coin) throws Exception {
-        long nonce = getApikey().getIncreasedNonce();
-
+        long nonce = CmnUtil.nsTime();
         String url = API_URL + BALANCE_URL;
 
         JSONObject params = new JSONObject();
@@ -121,8 +116,8 @@ public class CoinoneComm {
     }
 
     public void twoFactorAuth(String type) throws Exception {
+        long nonce = CmnUtil.nsTime();
         String url = API_URL + TRANSACTION_URL + "auth_number/";
-        long nonce = getApikey().getIncreasedNonce();
 
         JSONObject params = new JSONObject();
         params.put("access_token", accessToken);
@@ -134,7 +129,7 @@ public class CoinoneComm {
     }
 
     public void sendBTC(String toAddress, double quantity, int authNumber, String walletType, String fromAddress) throws Exception {
-        long nonce = getApikey().getIncreasedNonce();
+        long nonce = CmnUtil.nsTime();
         String url = API_URL + TRANSACTION_URL + "btc/";
 
         JSONObject params = new JSONObject();
@@ -172,7 +167,7 @@ public class CoinoneComm {
     }
 
     public String makeOrder(OrderType orderType, String coin, long price, double quantity) throws Exception {
-        long nonce = getApikey().getIncreasedNonce();
+        long nonce = CmnUtil.nsTime();
         String url = "";
         if(orderType == OrderType.BUY)
             url = "v2/order/limit_buy/";
@@ -202,7 +197,7 @@ public class CoinoneComm {
     }
 
     public void cancelOrder(String orderId, int krwPrice, double quantity, boolean isSell, String coin) throws Exception {
-        long nonce = getApikey().getIncreasedNonce();
+        long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/cancel/";
 
         JSONObject params = new JSONObject();
@@ -220,7 +215,7 @@ public class CoinoneComm {
     }
 
     public JSONObject getOrderInfo(String orderId, String coin) throws Exception {
-        long nonce = getApikey().getIncreasedNonce();
+        long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/order_info/";
 
         JSONObject params = new JSONObject();

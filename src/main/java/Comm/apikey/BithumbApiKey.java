@@ -28,10 +28,12 @@ public class BithumbApiKey implements ApiKey {
 
     public String getKey() { return (String) getApikey().get("connect"); }
 
+    @Deprecated
     public long getNonce() {
         return (long) getApikey().get("nonce");
     }
 
+    @Deprecated
     public void setNonce(long nonce) {
         getApikey().put("nonce", nonce);
     }
@@ -40,6 +42,7 @@ public class BithumbApiKey implements ApiKey {
         return (String) getApikey().get("secret");
     }
 
+    @Deprecated
     public long getIncreasedNonce() throws Exception {
         long nonce = getNonce() + 1;
         setNonce(nonce);

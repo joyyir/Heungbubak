@@ -182,9 +182,7 @@ public class BithumbComm {
     }
 
     private JSONObject callApi(String endpoint, Map<String, String> params) throws Exception {
-        String key = getApikey().getKey();
-        String secret = getApikey().getSecret();
-        long nonce = CmnUtil.msTime();
+        long nonce = CmnUtil.nsTime();
 
         String strParams = HTTPUtil.paramsBuilder(params);
         String encodedParams = HTTPUtil.encodeURIComponent(strParams);

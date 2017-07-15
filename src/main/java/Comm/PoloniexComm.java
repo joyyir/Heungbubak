@@ -1,6 +1,7 @@
 package Comm;
 
 import Comm.apikey.PoloniexApiKey;
+import Util.CmnUtil;
 import Util.Encryptor;
 import Util.HTTPUtil;
 import lombok.Getter;
@@ -21,13 +22,16 @@ public class PoloniexComm {
     public static final String COIN_XRP = "XRP";
     public static final String COIN_USDT = "USDT";
     public static final String COIN_STR = "STR";
-    public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETH, COIN_ETC, COIN_XRP, COIN_STR };
 
     @Getter @Setter
     private PoloniexApiKey apikey;
+    private String key;
+    private String secret;
 
     public PoloniexComm() throws Exception {
         setApikey(new PoloniexApiKey());
+        key = getApikey().getKey();
+        secret = getApikey().getSecret();
     }
 
     public double getMarketPrice(String unitCoin, String coin) throws Exception {
@@ -37,10 +41,7 @@ public class PoloniexComm {
     }
 
     public double getBalance(String coin) throws Exception {
-        String key = getApikey().getKey();
-        String secret = getApikey().getSecret();
-        int nonce = getApikey().getIncreasedNonce();
-
+        long nonce = CmnUtil.nsTime();
         String params = "nonce=" + nonce + "&command=returnBalances";
 
         Map<String, String> map = new HashMap<>();
@@ -54,10 +55,7 @@ public class PoloniexComm {
     }
 
     public double getCompleteBalance() throws Exception {
-        String key = getApikey().getKey();
-        String secret = getApikey().getSecret();
-        int nonce = getApikey().getIncreasedNonce();
-
+        long nonce = CmnUtil.nsTime();
         Double completeBal = 0.0;
 
         try {

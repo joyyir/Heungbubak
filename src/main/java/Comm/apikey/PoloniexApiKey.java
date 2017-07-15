@@ -28,10 +28,12 @@ public class PoloniexApiKey implements ApiKey {
 
     public String getKey() { return (String) getApikey().get("key"); }
 
+    @Deprecated
     public int getNonce() {
         return (int) getApikey().get("nonce");
     }
 
+    @Deprecated
     public void setNonce(int nonce) {
         getApikey().put("nonce", nonce);
     }
