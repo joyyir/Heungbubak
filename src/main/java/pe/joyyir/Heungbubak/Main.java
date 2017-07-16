@@ -13,7 +13,7 @@ public class Main {
 
     public static void main(String[] args) {
         final int timeInterval = 10000;
-        final String subject = "ÈïºÎ¹Ú ¾Ë¸²";
+        final String subject = "í¥ë¶€ë°• ì•Œë¦¼";
         List<Routine> routineList = new ArrayList();
 
         try {

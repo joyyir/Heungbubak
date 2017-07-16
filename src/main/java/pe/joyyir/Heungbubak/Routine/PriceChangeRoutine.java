@@ -43,7 +43,7 @@ public class PriceChangeRoutine implements Routine {
             StringBuilder sb = new StringBuilder();
             StringBuilder sbMail = new StringBuilder();
             sb.append("\t");
-            sbMail.append("< ÇöÀç ½Ã¼¼ >\n");
+            sbMail.append("< í˜„ìž¬ ì‹œì„¸ >\n");
 
             for(int i = 0; i < prevPrice.length(); i++) {
                 JSONObject obj = prevPrice.getJSONObject(i);

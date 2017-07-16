@@ -46,7 +46,7 @@ public class ArbitrageRoutine implements Routine{
             long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
             long coinonePrice = 0, bithumbPrice = 0;
 
-            if(isTiming) { // ÇÑ¹ø ¾Ë¸² ÈÄ¿¡´Â 60ÃÊµ¿¾È ´Ù½Ã ¾Ë¸²À» ÁÖÁö ¾Ê´Â´Ù.
+            if(isTiming) { // í•œë²ˆ ì•Œë¦¼ í›„ì—ëŠ” 60ì´ˆë™ì•ˆ ë‹¤ì‹œ ì•Œë¦¼ì„ ì£¼ì§€ ì•ŠëŠ”ë‹¤.
                 timingCount++;
                 if(timingCount == 6) {
                     isTiming = false;
@@ -68,10 +68,10 @@ public class ArbitrageRoutine implements Routine{
 
             if(needNotice) {
                 String mailMsg =
-                    coin.name() + " °Å·¡¼Ò Â÷ÀÍ °Å·¡ Å¸ÀÌ¹Ö ÀÔ´Ï´Ù.\n" +
+                    coin.name() + " ê±°ë˜ì†Œ ì°¨ìµ ê±°ë˜ íƒ€ì´ë° ì…ë‹ˆë‹¤.\n" +
                     "Bithumb: " + bithumbPrice + "\n" +
                     "Coinone: " + coinonePrice + "\n" +
-                    "Â÷¾×: " + Math.abs(bithumbBuyPrice - coinoneSellPrice);
+                    "ì°¨ì•¡: " + Math.abs(bithumbBuyPrice - coinoneSellPrice);
                 emailSender.setStringAndReady("Arbitrage", mailMsg);
             }
         }
@@ -85,15 +85,15 @@ public class ArbitrageRoutine implements Routine{
             BithumbComm bithumb = new BithumbComm();
             CoinoneComm coinone = new CoinoneComm();
 
-            // step 1. ½Ã¼¼ È®ÀÎ
+            // step 1. ì‹œì„¸ í™•ì¸
             long bithumbPrice, coinonePrice;
             bithumbPrice = bithumb.getMarketPrice(Coin.BTC, PriceType.BUY);
             coinonePrice = coinone.getLastMarketPrice(Coin.BTC);
 
-            System.out.printf("step 1. ½Ã¼¼\n");
+            System.out.printf("step 1. ì‹œì„¸\n");
             System.out.printf("\tbithumb(%d) coinone(%d) diff(%d)\n", bithumbPrice, coinonePrice, Math.abs(bithumbPrice-coinonePrice));
 
-            // step 2. °Å·¡ °¡´É¾× º¸À¯ ¿©ºÎ È®ÀÎ
+            // step 2. ê±°ë˜ ê°€ëŠ¥ì•¡ ë³´ìœ  ì—¬ë¶€ í™•ì¸
             double bithumbKRW, bithumbBTC;
             double coinoneKRW, coinoneBTC;
             bithumbKRW = bithumb.getBalance(Coin.KRW);
@@ -101,31 +101,31 @@ public class ArbitrageRoutine implements Routine{
             coinoneKRW = coinone.getBalance(Coin.KRW);
             coinoneBTC = coinone.getBalance(Coin.BTC);
 
-            System.out.printf("\nstep 2. º¸À¯¾×\n");
+            System.out.printf("\nstep 2. ë³´ìœ ì•¡\n");
             System.out.printf("\tbithumb: KRW(%f) BTC(%f)\n", bithumbKRW, bithumbBTC);
             System.out.printf("\tcoinone: KRW(%f) BTC(%f)\n", coinoneKRW, coinoneBTC);
 
-            // step 3. °Å·¡ °³¼ö
-            // step 3-1. ºø½æ¿¡¼­ ÆÈ°í ÄÚÀÎ¿ø¿¡¼­ ±¸¸Å
-            System.out.printf("\nstep 3. °Å·¡ °³¼ö\n");
-            System.out.printf("\tstep 3-1. ºø½æ¿¡¼­ ÆÈ°í ÄÚÀÎ¿ø¿¡¼­ ±¸¸Å\n");
-            System.out.printf("\t\tºø½æ¿¡¼­ ÆÈ ¼ö ÀÖ´Â °³¼ö: %f\n", bithumbBTC);
-            System.out.printf("\t\tÄÚÀÎ¿ø¿¡¼­ »ì ¼ö ÀÖ´Â °³¼ö: %f\n", coinoneKRW/coinonePrice);
-            System.out.printf("\t\tÃÖÁ¾ °Å·¡ÇÒ ¼ö ÀÖ´Â °³¼ö: %f\n", Math.min(bithumbBTC, coinoneKRW/coinonePrice));
-            System.out.printf("\tstep 3-2. ÄÚÀÎ¿ø¿¡¼­ ÆÈ°í ºø½æ¿¡¼­ ±¸¸Å\n");
-            System.out.printf("\t\tÄÚÀÎ¿ø¿¡¼­ ÆÈ ¼ö ÀÖ´Â °³¼ö: %f\n", coinoneBTC);
-            System.out.printf("\t\tºø½æ¿¡¼­ »ì ¼ö ÀÖ´Â °³¼ö: %f\n", bithumbKRW/bithumbPrice);
-            System.out.printf("\t\tÃÖÁ¾ °Å·¡ÇÒ ¼ö ÀÖ´Â °³¼ö: %f\n", Math.min(coinoneBTC, bithumbKRW/bithumbPrice));
+            // step 3. ê±°ë˜ ê°œìˆ˜
+            // step 3-1. ë¹—ì¸ì—ì„œ íŒ”ê³  ì½”ì¸ì›ì—ì„œ êµ¬ë§¤
+            System.out.printf("\nstep 3. ê±°ë˜ ê°œìˆ˜\n");
+            System.out.printf("\tstep 3-1. ë¹—ì¸ì—ì„œ íŒ”ê³  ì½”ì¸ì›ì—ì„œ êµ¬ë§¤\n");
+            System.out.printf("\t\të¹—ì¸ì—ì„œ íŒ” ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", bithumbBTC);
+            System.out.printf("\t\tì½”ì¸ì›ì—ì„œ ì‚´ ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", coinoneKRW/coinonePrice);
+            System.out.printf("\t\tìµœì¢… ê±°ë˜í•  ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", Math.min(bithumbBTC, coinoneKRW/coinonePrice));
+            System.out.printf("\tstep 3-2. ì½”ì¸ì›ì—ì„œ íŒ”ê³  ë¹—ì¸ì—ì„œ êµ¬ë§¤\n");
+            System.out.printf("\t\tì½”ì¸ì›ì—ì„œ íŒ” ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", coinoneBTC);
+            System.out.printf("\t\të¹—ì¸ì—ì„œ ì‚´ ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", bithumbKRW/bithumbPrice);
+            System.out.printf("\t\tìµœì¢… ê±°ë˜í•  ìˆ˜ ìˆëŠ” ê°œìˆ˜: %f\n", Math.min(coinoneBTC, bithumbKRW/bithumbPrice));
 
-            // step 4. °Å·¡ ½ÂÀÎ
-            System.out.printf("\nstep 4. °Å·¡ ½ÂÀÎ\n");
-            System.out.printf("\t°Å·¡¸¦ ÁøÇàÇÏ·Á ÇÕ´Ï´Ù. µ¿ÀÇÇÏ½Ê´Ï±î?(y/n) : ");
+            // step 4. ê±°ë˜ ìŠ¹ì¸
+            System.out.printf("\nstep 4. ê±°ë˜ ìŠ¹ì¸\n");
+            System.out.printf("\tê±°ë˜ë¥¼ ì§„í–‰í•˜ë ¤ í•©ë‹ˆë‹¤. ë™ì˜í•˜ì‹­ë‹ˆê¹Œ?(y/n) : ");
             Scanner sc = new Scanner(System.in);
             String userInput = sc.nextLine();
             if(!userInput.toUpperCase().equals("Y"))
                 return;
 
-            // step 5. ÆÇ¸Å
+            // step 5. íŒë§¤
 
         }
         catch (Exception e) {

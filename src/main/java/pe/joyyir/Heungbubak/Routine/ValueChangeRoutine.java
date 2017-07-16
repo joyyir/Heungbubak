@@ -14,7 +14,7 @@ import java.util.Date;
 public class ValueChangeRoutine implements Routine {
     private static long TARGET_WON = -1;
     private static long TARGET_WON_INTERVAL = 200000;
-    private static final String MAIL_SUBJECT = "»Ô∫Œπ⁄ æÀ∏≤";
+    private static final String MAIL_SUBJECT = "Ìù•Î∂ÄÎ∞ï ÏïåÎ¶º";
 
     private CoinoneComm coinone = new CoinoneComm();
     private PoloniexComm poloniex = new PoloniexComm();
@@ -46,7 +46,7 @@ public class ValueChangeRoutine implements Routine {
                     + " KRW, poloniex: " + poloBal
                     + " BTC, wallet: " + walletBal
                     + " BTC, total: " + totalWon + " KRW (" + increaseRate + "%)";
-            String strLogMail = "< «ˆ¿Á ∫∏¿Ø ∞°ƒ° >\n"
+            String strLogMail = "< ÌòÑÏû¨ Î≥¥Ïú† Í∞ÄÏπò >\n"
                     + "coinone: " + coinoneBal + " KRW\n"
                     + "poloniex: " + poloBal + " BTC\n"
                     + "wallet: " + walletBal + " BTC\n"

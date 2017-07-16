@@ -33,3 +33,9 @@ dependencies {
     compile group: 'commons-codec', name: 'commons-codec', version: '1.10'
     compile group: 'javax.mail', name: 'mail', version: '1.4.7'
 }
+
+task copyResources(type: Copy) {
+    delete 'build/libs/resources'
+    from 'src/main/resources'
+    into 'build/libs/resources'
+}
