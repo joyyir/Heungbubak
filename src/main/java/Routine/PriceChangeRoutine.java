@@ -3,6 +3,7 @@ package Routine;
 import Comm.CoinoneComm;
 import Comm.EmailSender;
 import Comm.PoloniexComm;
+import Const.Coin;
 import Util.Config;
 import lombok.Setter;
 import org.json.JSONArray;
@@ -22,15 +23,15 @@ public class PriceChangeRoutine implements Routine {
     }
 
     private boolean isCoinonePriceAvail(String _coin, String _unit) {
-        String coin = _coin.toLowerCase();
-        String unit = _unit.toLowerCase();
+        String coin = _coin.toUpperCase();
+        String unit = _unit.toUpperCase();
 
-        if(!(CoinoneComm.COIN_KRW).equals(unit))
+        if(!Coin.KRW.name().equals(unit))
             return false;
 
-        String[] coinArr = CoinoneComm.COIN_ARRAY;
+        Coin[] coinArr = CoinoneComm.COIN_ARRAY;
         for(int i = 0; i < coinArr.length; i++) {
-            if(coinArr[i].equals(coin))
+            if(coinArr[i].name().equals(coin))
                 return true;
         }
         return false;
@@ -51,14 +52,14 @@ public class PriceChangeRoutine implements Routine {
 
                 if(isCoinonePriceAvail(coin, unit)) {
                     int price = obj.getInt("price");
-                    int coinPrice = coinone.getLastMarketPrice(coin);
+                    int coinPrice = coinone.getLastMarketPrice(Coin.valueOf(coin.toUpperCase()));
                     int percent = (int)(coinPrice / (double)price * 100);
                     sb.append("[" + coin + ": " + coinPrice + " " + unit + " (" + percent + "%)]    ");
                     sbMail.append(coin + ": " + coinPrice + " " + unit + " (" + percent + "%)\n");
                 }
                 else {
                     double price = obj.getDouble("price");
-                    double coinPrice = poloniex.getMarketPrice(unit, coin);
+                    double coinPrice = poloniex.getMarketPrice(Coin.valueOf(unit), Coin.valueOf(coin));
                     int percent = (int)(coinPrice / price * 100);
                     sb.append("[" + coin + ": " + coinPrice + " " + unit + " (" + percent + "%)]    ");
                     sbMail.append(coin + ": " + coinPrice + " " + unit + " (" + percent + "%)\n");

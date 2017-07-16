@@ -1,6 +1,7 @@
 package Comm;
 
 import Comm.apikey.CoinoneApiKey;
+import Const.Coin;
 import Util.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,11 +17,7 @@ public class CoinoneComm {
     private final String BALANCE_URL = "v2/account/balance/";
     private final String TRANSACTION_URL = "v2/transaction/";
 
-    public static final String COIN_BTC = "btc";
-    public static final String COIN_ETH = "eth";
-    public static final String COIN_ETC = "etc";
-    public static final String COIN_KRW = "krw";
-    public static final String[] COIN_ARRAY = { COIN_BTC, COIN_ETC, COIN_ETH };
+    public static final Coin[] COIN_ARRAY = { Coin.BTC, Coin.ETC, Coin.ETH };
 
     public enum PriceType {
         BUY("bid"), SELL("ask");
@@ -46,13 +43,13 @@ public class CoinoneComm {
         secret = getApikey().getSecret();
     }
 
-    public int getLastMarketPrice(String coin) throws Exception {
-        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin);
+    public int getLastMarketPrice(Coin coin) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin.name().toLowerCase());
         return Integer.valueOf(jsonObject.getString("last"));
     }
 
-    public int getAverageMarketPrice(String coin, PriceType priceType, double quantity) throws Exception {
-        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.toLowerCase());
+    public int getAverageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());
         JSONArray orders = jsonObject.getJSONArray(priceType.toString());
         double sum = 0.0;
         double left = quantity;
@@ -76,12 +73,12 @@ public class CoinoneComm {
         return (int)(sum/quantity);
     }
 
-    public int getMarketPrice(String coin, PriceType priceType) throws Exception {
-        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.toLowerCase());
+    public int getMarketPrice(Coin coin, PriceType priceType) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());
         return jsonObject.getJSONArray(priceType.toString()).getJSONObject(0).getInt("price");
     }
 
-    public double getBalance(String coin) throws Exception {
+    public double getBalance(Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + BALANCE_URL;
 
@@ -90,7 +87,7 @@ public class CoinoneComm {
         params.put("access_token", accessToken);
 
         JSONObject result = callPrivateApi(url, params);
-        String strBalance = result.getJSONObject(coin).getString("avail");
+        String strBalance = result.getJSONObject(coin.name().toLowerCase()).getString("avail");
 
         return Double.valueOf(strBalance);
     }
@@ -109,10 +106,10 @@ public class CoinoneComm {
     }
 
     public long getCompleteBalance() throws Exception {
-        return (long) (getLastMarketPrice(COIN_BTC) * getBalance(COIN_BTC))
-                + (long) (getLastMarketPrice(COIN_ETH) * getBalance(COIN_ETH))
-                + (long) (getLastMarketPrice(COIN_ETC) * getBalance(COIN_ETC))
-                + (long) getBalance(COIN_KRW);
+        return (long) (getLastMarketPrice(Coin.BTC) * getBalance(Coin.BTC))
+                + (long) (getLastMarketPrice(Coin.ETH) * getBalance(Coin.ETH))
+                + (long) (getLastMarketPrice(Coin.ETC) * getBalance(Coin.ETC))
+                + (long) getBalance(Coin.KRW);
     }
 
     public void twoFactorAuth(String type) throws Exception {
@@ -166,7 +163,7 @@ public class CoinoneComm {
         return desc;
     }
 
-    public String makeOrder(OrderType orderType, String coin, long price, double quantity) throws Exception {
+    public String makeOrder(OrderType orderType, Coin coin, long price, double quantity) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = "";
         if(orderType == OrderType.BUY)
@@ -182,7 +179,7 @@ public class CoinoneComm {
         params.put("access_token", accessToken);
         params.put("price", price);
         params.put("qty", quantity);
-        params.put("currency", coin.toLowerCase());
+        params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
@@ -190,13 +187,13 @@ public class CoinoneComm {
         return result.getString("orderId");
     }
 
-    public boolean isOrderComplete(String orderId, String coin) throws Exception {
+    public boolean isOrderComplete(String orderId, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, coin);
         String status = result.getString("status"); // live, filled, partially_filled
         return status.equals("filled");
     }
 
-    public void cancelOrder(String orderId, int krwPrice, double quantity, boolean isSell, String coin) throws Exception {
+    public void cancelOrder(String orderId, int krwPrice, double quantity, boolean isSell, Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/cancel/";
 
@@ -207,21 +204,21 @@ public class CoinoneComm {
         params.put("qty", quantity);
         int isAsk = isSell ? 1 : 0;
         params.put("is_ask", isAsk);
-        params.put("currency", coin.toLowerCase());
+        params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
         errorCheck(result);
     }
 
-    public JSONObject getOrderInfo(String orderId, String coin) throws Exception {
+    public JSONObject getOrderInfo(String orderId, Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/order_info/";
 
         JSONObject params = new JSONObject();
         params.put("access_token", accessToken);
         params.put("order_id", orderId);
-        params.put("currency", coin.toLowerCase());
+        params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
@@ -239,26 +236,26 @@ public class CoinoneComm {
             CoinoneComm comm = new CoinoneComm();
             /*
             int authNumber;
-            comm.twoFactorAuth(CoinoneComm.COIN_BTC);
+            comm.twoFactorAuth(CoinoneComm.Coin.BTC);
             System.out.print("Coinone OTP 번호를 입력하세요 : ");
             Scanner sc = new Scanner(System.in);
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
             */
             /*
-            String orderId = comm.makeOrder(OrderType.SELL, COIN_ETC, 1000000, 0.05);
-            System.out.println(comm.isOrderComplete(orderId, COIN_ETC));
-            comm.cancelOrder(orderId, 1000000, 0.05, true, COIN_ETC);
+            String orderId = comm.makeOrder(OrderType.SELL, Coin.ETC, 1000000, 0.05);
+            System.out.println(comm.isOrderComplete(orderId, Coin.ETC));
+            comm.cancelOrder(orderId, 1000000, 0.05, true, Coin.ETC);
             */
 
-            //comm.getMarketPrice(COIN_BTC, PriceType.BUY);
+            //comm.getMarketPrice(Coin.BTC, PriceType.BUY);
 
-            System.out.println("1개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 1.0));
-            System.out.println("10개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 10.0));
-            System.out.println("10000개 살때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.BUY, 10000.0));
-            System.out.println("1개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 1.0));
-            System.out.println("10개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 10.0));
-            System.out.println("10000개 팔때: " + comm.getAverageMarketPrice(COIN_BTC, PriceType.SELL, 10000.0));
+            System.out.println("1개 살때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 1.0));
+            System.out.println("10개 살때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10.0));
+            System.out.println("10000개 살때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10000.0));
+            System.out.println("1개 팔때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 1.0));
+            System.out.println("10개 팔때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10.0));
+            System.out.println("10000개 팔때: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10000.0));
 
         }
         catch(Exception e) {

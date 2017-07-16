@@ -3,6 +3,7 @@ package Routine;
 import Comm.CoinoneComm;
 import Comm.EmailSender;
 import Comm.PoloniexComm;
+import Const.Coin;
 import Util.Config;
 import lombok.Setter;
 import org.json.JSONObject;
@@ -34,8 +35,8 @@ public class ValueChangeRoutine implements Routine {
 
             long coinoneBal = coinone.getCompleteBalance();
             double poloBal = poloniex.getCompleteBalance();
-            double walletBal = poloniex.getMarketPrice(PoloniexComm.COIN_BTC, PoloniexComm.COIN_STR) * paperWallet.getDouble(PoloniexComm.COIN_STR);
-            double btcPrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
+            double walletBal = poloniex.getMarketPrice(Coin.BTC, Coin.STR) * paperWallet.getDouble(Coin.STR.name());
+            double btcPrice = coinone.getLastMarketPrice(Coin.BTC);
             long totalWon = coinoneBal + (long) ((poloBal + walletBal) * btcPrice);
             int increaseRate = (int)((double)totalWon / Config.getInvestment() * 100);
 

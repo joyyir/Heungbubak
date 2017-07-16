@@ -1,6 +1,8 @@
 package Comm;
 
 import Comm.apikey.BithumbApiKey;
+import Const.BankCode;
+import Const.Coin;
 import Util.CmnUtil;
 import Util.Encryptor;
 import Util.HTTPUtil;
@@ -14,12 +16,6 @@ import java.util.Map;
 public class BithumbComm {
     private final String API_URL = "https://api.bithumb.com/";
     private final String TICKER_URL = "public/ticker/";
-
-    public static final String COIN_BTC = "BTC";
-    public static final String COIN_ETH = "ETH";
-    public static final String COIN_ETC = "ETC";
-    public static final String COIN_XRP = "XRP";
-    public static final String COIN_KRW = "KRW";
 
     public static final String STATUS_CODE_SUCCESS = "0000";
     public static final String STATUS_CODE_CUSTOM = "5600";
@@ -36,19 +32,6 @@ public class BithumbComm {
             return type;
         }
     }
-    public enum BankCode {
-        SHINHAN("088");
-
-        String bankCode;
-        BankCode(String bankCode) {
-            this.bankCode = bankCode;
-        }
-
-        @Override
-        public String toString() {
-            return bankCode;
-        }
-    }
 
     @Getter @Setter
     private BithumbApiKey apikey;
@@ -61,8 +44,8 @@ public class BithumbComm {
         secret = getApikey().getSecret();
     }
 
-    public long getMarketPrice(String coin, PriceType priceType) throws Exception {
-        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin);
+    public long getMarketPrice(Coin coin, PriceType priceType) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin.name());
 
         String key = "";
         switch (priceType) {
@@ -77,43 +60,43 @@ public class BithumbComm {
         return Long.valueOf(jsonObject.getJSONObject("data").getString(key));
     }
 
-    public double getBalance(String coin) throws Exception {
+    public double getBalance(Coin coin) throws Exception {
         double balance;
         String endpoint = "info/balance";
         Map<String, String> params = new HashMap<>();
-        params.put("order_currency", coin);
+        params.put("order_currency", coin.name().toUpperCase());
         params.put("payment_currency", "KRW");
         params.put("endpoint", '/' + endpoint);
         JSONObject result = callApi(endpoint, params);
 
         try {
-            balance = result.getJSONObject("data").getDouble("total_" + coin.toLowerCase());
+            balance = result.getJSONObject("data").getDouble("total_" + coin.name().toLowerCase());
         }
         catch (Exception e) {
-            //throw new Exception(coin + "이 존재하지 않습니다.\n" + CmnUtil.getStackTraceString(e));
+            //throw new Exception(coin.name() + "이 존재하지 않습니다.\n" + CmnUtil.getStackTraceString(e));
             balance = 0.0;
         }
         return balance;
     }
 
-    public void sendCoin(String coin, float units, String address, Integer destination) throws Exception {
+    public void sendCoin(Coin coin, float units, String address, Integer destination) throws Exception {
         String endpoint = "trade/btc_withdrawal";
         Map<String, String> params = new HashMap<>();
         params.put("units", String.valueOf(units));
         params.put("address", address);
-        if(coin.equals(COIN_XRP))
+        if(coin == Coin.XRP)
             params.put("destination", destination.toString());
-        params.put("currency", coin);
+        params.put("currency", coin.name().toUpperCase());
 
         JSONObject result = callApi(endpoint, params);
 
         errorCheck(result, "Sending coin");
     }
 
-    public String makeOrder(OrderType orderType, String coin, Long price, Float quantity) throws Exception {
+    public String makeOrder(OrderType orderType, Coin coin, Long price, Float quantity) throws Exception {
         final String endpoint = "trade/place";
         Map<String, String> params = new HashMap<>();
-        params.put("order_currency", coin.toUpperCase());
+        params.put("order_currency", coin.name().toUpperCase());
         params.put("Payment_currency", "KRW");
         params.put("units", quantity.toString());
         params.put("price", price.toString());
@@ -141,7 +124,7 @@ public class BithumbComm {
         errorCheck(result, "Withdrawal KRW");
     }
 
-    public boolean isOrderCompleted(String orderId, OrderType orderType, String coin) throws Exception {
+    public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         try {
             JSONObject result = getOrderInfo(orderId, orderType, coin, true);
             return (result != null);
@@ -157,25 +140,25 @@ public class BithumbComm {
         }
     }
 
-    public JSONObject getOrderInfo(String orderId, OrderType orderType, String coin, boolean finished) throws Exception {
+    public JSONObject getOrderInfo(String orderId, OrderType orderType, Coin coin, boolean finished) throws Exception {
         final String endpoint = finished ? "info/order_detail" : "info/orders";
 
         Map<String, String> params = new HashMap<>();
         params.put("order_id", orderId);
         params.put("type", orderType.toString());
-        params.put("currency", coin.toUpperCase());
+        params.put("currency", coin.name().toUpperCase());
 
         JSONObject result = callApi(endpoint, params);
         errorCheck(result, "getOrderInfo");
         return result;
     }
 
-    public void cancelOrder(String orderId, OrderType orderType, String coin) throws Exception {
+    public void cancelOrder(String orderId, OrderType orderType, Coin coin) throws Exception {
         final String endpoint = "trade/cancel";
         Map<String, String> params = new HashMap<>();
         params.put("type", orderType.toString());
         params.put("order_id", orderId);
-        params.put("currency", coin.toUpperCase());
+        params.put("currency", coin.name().toUpperCase());
 
         JSONObject result = callApi(endpoint, params);
         errorCheck(result, "Cancel order");
@@ -229,29 +212,29 @@ public class BithumbComm {
             CoinoneComm coinComm = new CoinoneComm();
 
             /*
-            comm.sendCoin(COIN_BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
+            comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
             */
 
             /*
-            long bithumbBTCprice = comm.getMarketPrice(BithumbComm.COIN_BTC, PriceType.BUY);
-            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.COIN_BTC);
+            long bithumbBTCprice = comm.getMarketPrice(BithumbComm.Coin.BTC, PriceType.BUY);
+            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.Coin.BTC);
             System.out.println("bithumb BTC 시세 : " + bithumbBTCprice);
             System.out.println("coinone BTC 시세 : " + coinoneBTCprice);
             System.out.println("차이 : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
             */
 
-            //comm.makeOrder(OrderType.BUY, COIN_ETC, 19570L, 0.1F);
-            //comm.makeOrder(OrderType.SELL, COIN_ETC, 19450L, 0.0998F);
+            //comm.makeOrder(OrderType.BUY, Coin.ETC, 19570L, 0.1F);
+            //comm.makeOrder(OrderType.SELL, Coin.ETC, 19450L, 0.0998F);
 
             //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
 
-            //String orderId = comm.makeOrder(OrderType.BUY, COIN_ETC, 10000L, 1F);
-            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, COIN_ETC));
-            //comm.getOrderInfo(orderId, OrderType.BUY, COIN_ETC, false);
-            //comm.cancelOrder(orderId, OrderType.BUY, COIN_ETC);
+            //String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000L, 1F);
+            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+            //comm.getOrderInfo(orderId, OrderType.BUY, Coin.ETC, false);
+            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
 
-            //comm.getOrderInfo("1499599864512", OrderType.SELL, COIN_ETC, true);
-            System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, COIN_ETC));
+            //comm.getOrderInfo("1499599864512", OrderType.SELL, Coin.ETC, true);
+            System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
         }
         catch (Exception e) {
             e.printStackTrace();

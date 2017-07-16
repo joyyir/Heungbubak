@@ -1,6 +1,7 @@
 package Comm;
 
 import Comm.apikey.PoloniexApiKey;
+import Const.Coin;
 import Util.CmnUtil;
 import Util.Encryptor;
 import Util.HTTPUtil;
@@ -16,13 +17,6 @@ public class PoloniexComm {
     private final String TICKER_URL = "public?command=returnTicker";
     private final String TRADING_URL = "tradingApi";
 
-    public static final String COIN_BTC = "BTC";
-    public static final String COIN_ETH = "ETH";
-    public static final String COIN_ETC = "ETC";
-    public static final String COIN_XRP = "XRP";
-    public static final String COIN_USDT = "USDT";
-    public static final String COIN_STR = "STR";
-
     @Getter @Setter
     private PoloniexApiKey apikey;
     private String key;
@@ -34,13 +28,13 @@ public class PoloniexComm {
         secret = getApikey().getSecret();
     }
 
-    public double getMarketPrice(String unitCoin, String coin) throws Exception {
+    public double getMarketPrice(Coin unitCoin, Coin coin) throws Exception {
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL);
-        String strPrice = jsonObject.getJSONObject(unitCoin + "_" + coin).getString("last");
+        String strPrice = jsonObject.getJSONObject(unitCoin.name() + "_" + coin.name()).getString("last");
         return Double.valueOf(strPrice);
     }
 
-    public double getBalance(String coin) throws Exception {
+    public double getBalance(Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String params = "nonce=" + nonce + "&command=returnBalances";
 
@@ -51,7 +45,7 @@ public class PoloniexComm {
 
         JSONObject json = HTTPUtil.getJSONfromPost(API_URL + TRADING_URL, map, params);
 
-        return Double.valueOf((String)json.get(coin));
+        return Double.valueOf((String)json.get(coin.name()));
     }
 
     public double getCompleteBalance() throws Exception {
@@ -88,8 +82,8 @@ public class PoloniexComm {
     public static void main(String[] args){
         try {
             PoloniexComm comm = new PoloniexComm();
-            System.out.println("현재 USDT_BTC 시세: " + comm.getMarketPrice(COIN_USDT, COIN_BTC));
-            System.out.println("내가 소유한 XRP: " + comm.getBalance(COIN_XRP));
+            System.out.println("현재 USDT_BTC 시세: " + comm.getMarketPrice(Coin.USDT, Coin.BTC));
+            System.out.println("내가 소유한 XRP: " + comm.getBalance(Coin.XRP));
             System.out.println("총 보유 가치 (BTC): " + comm.getCompleteBalance());
         }
         catch(Exception e){

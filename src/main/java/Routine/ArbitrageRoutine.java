@@ -3,6 +3,7 @@ package Routine;
 import Comm.BithumbComm;
 import Comm.CoinoneComm;
 import Comm.EmailSender;
+import Const.Coin;
 import lombok.Setter;
 
 import java.util.Scanner;
@@ -35,8 +36,8 @@ public class ArbitrageRoutine implements Routine{
         try {
             // 시세와 개수 가져옴
             long coinoneAmount = 0, bithumbAmount = 0;
-            long bithumbPrice = bithumb.getMarketPrice(BithumbComm.COIN_BTC, BithumbComm.PriceType.BUY);
-            long coinonePrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
+            long bithumbPrice = bithumb.getMarketPrice(Coin.BTC, BithumbComm.PriceType.BUY);
+            long coinonePrice = coinone.getLastMarketPrice(Coin.BTC);
 
             if(isTiming) { // 한번 알림 후에는 60초동안 다시 알림을 주지 않는다.
                 timingCount++;
@@ -84,8 +85,8 @@ public class ArbitrageRoutine implements Routine{
 
             // step 1. 시세 확인
             long bithumbPrice, coinonePrice;
-            bithumbPrice = bithumb.getMarketPrice(BithumbComm.COIN_BTC, BithumbComm.PriceType.BUY);
-            coinonePrice = coinone.getLastMarketPrice(CoinoneComm.COIN_BTC);
+            bithumbPrice = bithumb.getMarketPrice(Coin.BTC, BithumbComm.PriceType.BUY);
+            coinonePrice = coinone.getLastMarketPrice(Coin.BTC);
 
             System.out.printf("step 1. 시세\n");
             System.out.printf("\tbithumb(%d) coinone(%d) diff(%d)\n", bithumbPrice, coinonePrice, Math.abs(bithumbPrice-coinonePrice));
@@ -93,10 +94,10 @@ public class ArbitrageRoutine implements Routine{
             // step 2. 거래 가능액 보유 여부 확인
             double bithumbKRW, bithumbBTC;
             double coinoneKRW, coinoneBTC;
-            bithumbKRW = bithumb.getBalance(BithumbComm.COIN_KRW);
-            bithumbBTC = bithumb.getBalance(BithumbComm.COIN_BTC);
-            coinoneKRW = coinone.getBalance(CoinoneComm.COIN_KRW);
-            coinoneBTC = coinone.getBalance(CoinoneComm.COIN_BTC);
+            bithumbKRW = bithumb.getBalance(Coin.KRW);
+            bithumbBTC = bithumb.getBalance(Coin.BTC);
+            coinoneKRW = coinone.getBalance(Coin.KRW);
+            coinoneBTC = coinone.getBalance(Coin.BTC);
 
             System.out.printf("\nstep 2. 보유액\n");
             System.out.printf("\tbithumb: KRW(%f) BTC(%f)\n", bithumbKRW, bithumbBTC);
