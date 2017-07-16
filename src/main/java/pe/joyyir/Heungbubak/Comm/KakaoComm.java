@@ -1,8 +1,8 @@
-package Comm;
+package pe.joyyir.Heungbubak.Comm;
 
-import Util.Config;
-import Util.HTTPUtil;
-import Util.IOUtil;
+import pe.joyyir.Heungbubak.Util.Config;
+import pe.joyyir.Heungbubak.Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Util.IOUtil;
 import org.json.JSONObject;
 
 import java.util.HashMap;

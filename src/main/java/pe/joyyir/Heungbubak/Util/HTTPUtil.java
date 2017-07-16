@@ -1,4 +1,4 @@
-package Util;
+package pe.joyyir.Heungbubak.Util;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +13,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

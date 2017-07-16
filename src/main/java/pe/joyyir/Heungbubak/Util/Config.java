@@ -1,4 +1,4 @@
-package Util;
+package pe.joyyir.Heungbubak.Util;
 
 import lombok.Getter;
 import lombok.Setter;

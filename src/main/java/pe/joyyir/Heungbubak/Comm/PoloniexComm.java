@@ -1,10 +1,10 @@
-package Comm;
+package pe.joyyir.Heungbubak.Comm;
 
-import Comm.apikey.PoloniexApiKey;
-import Const.Coin;
-import Util.CmnUtil;
-import Util.Encryptor;
-import Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Comm.apikey.PoloniexApiKey;
+import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Util.CmnUtil;
+import pe.joyyir.Heungbubak.Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Util.Encryptor;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;

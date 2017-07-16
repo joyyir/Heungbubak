@@ -1,8 +1,10 @@
-import Comm.EmailSender;
-import Routine.PriceChangeRoutine;
-import Routine.Routine;
-import Routine.ValueChangeRoutine;
-import Routine.ArbitrageRoutine;
+package pe.joyyir.Heungbubak;
+
+import pe.joyyir.Heungbubak.Comm.EmailSender;
+import pe.joyyir.Heungbubak.Routine.PriceChangeRoutine;
+import pe.joyyir.Heungbubak.Routine.Routine;
+import pe.joyyir.Heungbubak.Routine.ValueChangeRoutine;
+import pe.joyyir.Heungbubak.Routine.ArbitrageRoutine;
 
 import java.util.ArrayList;
 import java.util.List;

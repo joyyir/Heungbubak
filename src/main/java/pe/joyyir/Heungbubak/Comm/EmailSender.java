@@ -1,4 +1,4 @@
-package Comm;
+package pe.joyyir.Heungbubak.Comm;
 
 import lombok.Getter;
 import lombok.Setter;

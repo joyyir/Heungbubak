@@ -1,11 +1,12 @@
-package Comm;
+package pe.joyyir.Heungbubak.Comm;
 
-import Comm.apikey.BithumbApiKey;
-import Const.BankCode;
-import Const.Coin;
-import Util.CmnUtil;
-import Util.Encryptor;
-import Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Comm.apikey.BithumbApiKey;
+import pe.joyyir.Heungbubak.Const.BankCode;
+import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.PriceType;
+import pe.joyyir.Heungbubak.Util.CmnUtil;
+import pe.joyyir.Heungbubak.Util.Encryptor;
+import pe.joyyir.Heungbubak.Util.HTTPUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
@@ -20,7 +21,6 @@ public class BithumbComm {
     public static final String STATUS_CODE_SUCCESS = "0000";
     public static final String STATUS_CODE_CUSTOM = "5600";
 
-    public enum PriceType { BUY, SELL }
     public enum OrderType {
         BUY("bid"), SELL("ask");
 

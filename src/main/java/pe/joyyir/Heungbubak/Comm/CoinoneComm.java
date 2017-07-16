@@ -1,8 +1,11 @@
-package Comm;
+package pe.joyyir.Heungbubak.Comm;
 
-import Comm.apikey.CoinoneApiKey;
-import Const.Coin;
-import Util.*;
+import pe.joyyir.Heungbubak.Comm.apikey.CoinoneApiKey;
+import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.PriceType;
+import pe.joyyir.Heungbubak.Util.CmnUtil;
+import pe.joyyir.Heungbubak.Util.Encryptor;
+import pe.joyyir.Heungbubak.Util.HTTPUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
@@ -19,17 +22,6 @@ public class CoinoneComm {
 
     public static final Coin[] COIN_ARRAY = { Coin.BTC, Coin.ETC, Coin.ETH };
 
-    public enum PriceType {
-        BUY("bid"), SELL("ask");
-
-        private String type;
-        PriceType(String type) { this.type = type; }
-
-        @Override
-        public String toString() {
-            return type;
-        }
-    }
     public enum OrderType { BUY, SELL }
 
     @Setter @Getter

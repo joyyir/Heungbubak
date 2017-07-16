@@ -1,4 +1,4 @@
-package Const;
+package pe.joyyir.Heungbubak.Const;
 
 public enum BankCode {
     SHINHAN("088");

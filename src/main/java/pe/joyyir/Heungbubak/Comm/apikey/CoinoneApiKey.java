@@ -1,18 +1,18 @@
-package Comm.apikey;
+package pe.joyyir.Heungbubak.Comm.apikey;
 
-import Util.Config;
-import Util.IOUtil;
+import pe.joyyir.Heungbubak.Util.Config;
+import pe.joyyir.Heungbubak.Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
-public class PoloniexApiKey implements ApiKey {
-    private static final String APIKEY_PATH = Config.getApikeyPathPoloniex();
+public class CoinoneApiKey implements ApiKey {
+    private static final String APIKEY_PATH = Config.getApikeyPathCoinone();
 
     @Getter @Setter
     private JSONObject apikey;
 
-    public PoloniexApiKey() throws Exception {
+    public CoinoneApiKey() throws Exception {
         readApiKey(APIKEY_PATH);
     }
 
@@ -26,24 +26,27 @@ public class PoloniexApiKey implements ApiKey {
         IOUtil.writeJson(path, getApikey());
     }
 
-    public String getKey() { return (String) getApikey().get("key"); }
-
     @Deprecated
-    public int getNonce() {
-        return (int) getApikey().get("nonce");
+    public long getNonce() {
+        return getApikey().getLong("nonce");
     }
 
     @Deprecated
-    public void setNonce(int nonce) {
+    public void setNonce(long nonce) {
         getApikey().put("nonce", nonce);
+    }
+
+    public String getAccessToken() {
+        return (String) getApikey().get("access_token");
     }
 
     public String getSecret() {
         return (String) getApikey().get("secret");
     }
 
-    public int getIncreasedNonce() throws Exception {
-        int nonce = getNonce() + 1;
+    @Deprecated
+    public long getIncreasedNonce() throws Exception {
+        long nonce = getNonce() + 1;
         setNonce(nonce);
         saveApiKey(APIKEY_PATH);
         return nonce;

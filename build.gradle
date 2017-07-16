@@ -3,13 +3,24 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'Quickstart'
+mainClassName = 'pe.joyyir.Heungbubak.Main'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 version = '1.0'
 
 repositories {
     mavenCentral()
+}
+
+jar {
+    manifest {
+        attributes 'Title': 'Heungbubak', 'Version': version, 'Main-Class': mainClassName
+    }
+    archiveName 'Heungbubak.jar'
+    dependsOn configurations.runtime
+    from {
+        configurations.compile.collect {it.isDirectory()? it: zipTree(it)}
+    }
 }
 
 dependencies {

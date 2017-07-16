@@ -1,9 +1,10 @@
-package Routine;
+package pe.joyyir.Heungbubak.Routine;
 
-import Comm.BithumbComm;
-import Comm.CoinoneComm;
-import Comm.EmailSender;
-import Const.Coin;
+import pe.joyyir.Heungbubak.Comm.BithumbComm;
+import pe.joyyir.Heungbubak.Comm.CoinoneComm;
+import pe.joyyir.Heungbubak.Comm.EmailSender;
+import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.PriceType;
 import lombok.Setter;
 
 import java.util.Scanner;
@@ -11,7 +12,7 @@ import java.util.Scanner;
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 3000;
-    private final int MIN_DIFF_ETC = 300;
+    private final int MIN_DIFF_ETC = 130;
     private final int MIN_DIFF_XRP = 3;
 
     private final String BITHUMB_BTC_WALLET_ADDRESS = "1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM";
@@ -34,10 +35,16 @@ public class ArbitrageRoutine implements Routine{
     @Override
     public void run() {
         try {
-            // 시세와 개수 가져옴
-            long coinoneAmount = 0, bithumbAmount = 0;
-            long bithumbPrice = bithumb.getMarketPrice(Coin.BTC, BithumbComm.PriceType.BUY);
-            long coinonePrice = coinone.getLastMarketPrice(Coin.BTC);
+            // config
+            final Coin coin = Coin.ETC;
+            final int MIN_DIFF = MIN_DIFF_ETC;
+
+            boolean needNotice = false;
+            long bithumbBuyPrice = bithumb.getMarketPrice(coin, PriceType.BUY);
+            long bithumbSellPrice = bithumb.getMarketPrice(coin, PriceType.SELL);
+            long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
+            long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
+            long coinonePrice = 0, bithumbPrice = 0;
 
             if(isTiming) { // 한번 알림 후에는 60초동안 다시 알림을 주지 않는다.
                 timingCount++;
@@ -46,31 +53,26 @@ public class ArbitrageRoutine implements Routine{
                     timingCount = 0;
                 }
             }
-            else if (Math.abs(coinonePrice - bithumbPrice) >= MIN_DIFF_BTC) {
+            else if (coinoneSellPrice - bithumbBuyPrice >= MIN_DIFF) {
                 isTiming = true;
-
-                String mailMsg =
-                    "BTC 거래소 차익 거래 타이밍 입니다.\n" +
-                    "Bithumb: " + bithumbPrice + "\n" +
-                    "Coinone: " + coinonePrice + "\n" +
-                    "차액: " + Math.abs(coinonePrice - bithumbPrice);
-                emailSender.setStringAndReady("Arbitrage", mailMsg);
+                needNotice = true;
+                coinonePrice = coinoneSellPrice;
+                bithumbPrice = bithumbBuyPrice;
+            }
+            else if (bithumbSellPrice - coinoneBuyPrice >= MIN_DIFF) {
+                isTiming = true;
+                needNotice = true;
+                coinonePrice = coinoneBuyPrice;
+                bithumbPrice = bithumbSellPrice;
             }
 
-            if (coinonePrice - bithumbPrice >= MIN_DIFF_BTC) {
-                // 거래 가능 여부 확인 (충분한 BTC, KRW)
-
-                // 코인원에서 비싸게 팔고, 빗썸에서 싸게 산다.
-
-                // 코인원에서 BTC 판매 (-BTC, +KRW)
-
-                // 빗썸에서 BTC 구매 (송금 수수료만큼 더 사야함)  (+BTC, -KRW)
-
-                // 빗썸->코인원 BTC 송금
-
-                // KRW 송금에 대한 노티
-            } else if (bithumbPrice - coinonePrice >= MIN_DIFF_BTC) {
-                // 빗썸에서 비싸게 팔고, 코인원에서 싸게 산다.
+            if(needNotice) {
+                String mailMsg =
+                    coin.name() + " 거래소 차익 거래 타이밍 입니다.\n" +
+                    "Bithumb: " + bithumbPrice + "\n" +
+                    "Coinone: " + coinonePrice + "\n" +
+                    "차액: " + Math.abs(bithumbBuyPrice - coinoneSellPrice);
+                emailSender.setStringAndReady("Arbitrage", mailMsg);
             }
         }
         catch (Exception e) {
@@ -85,7 +87,7 @@ public class ArbitrageRoutine implements Routine{
 
             // step 1. 시세 확인
             long bithumbPrice, coinonePrice;
-            bithumbPrice = bithumb.getMarketPrice(Coin.BTC, BithumbComm.PriceType.BUY);
+            bithumbPrice = bithumb.getMarketPrice(Coin.BTC, PriceType.BUY);
             coinonePrice = coinone.getLastMarketPrice(Coin.BTC);
 
             System.out.printf("step 1. 시세\n");

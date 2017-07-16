@@ -1,10 +1,10 @@
-package Routine;
+package pe.joyyir.Heungbubak.Routine;
 
-import Comm.CoinoneComm;
-import Comm.EmailSender;
-import Comm.PoloniexComm;
-import Const.Coin;
-import Util.Config;
+import pe.joyyir.Heungbubak.Comm.CoinoneComm;
+import pe.joyyir.Heungbubak.Comm.EmailSender;
+import pe.joyyir.Heungbubak.Comm.PoloniexComm;
+import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Util.Config;
 import lombok.Setter;
 import org.json.JSONObject;
 
