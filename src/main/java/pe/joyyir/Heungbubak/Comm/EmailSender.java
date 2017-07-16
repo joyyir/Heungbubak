@@ -10,7 +10,6 @@ import java.util.Map;
 
 public class EmailSender {
     private List<String> strList = new ArrayList<>();
-    private Map<String, String> strMap = new HashMap<>();
     private String subject = "undefined";
     @Getter @Setter
     private boolean isReady = true;
@@ -24,13 +23,12 @@ public class EmailSender {
         if(key == null || value == null)
             return;
 
-        if(strMap.get(key) == null)
-            strList.add(value);
-        strMap.put(key, value);
+        strList.add(value);
     }
 
     public void sendEmail() throws Exception {
         GmailComm.sendEmail(subject, getEmailMessage());
+        strList.clear();
     }
 
     public String getEmailMessage() {

@@ -22,8 +22,8 @@ public class ArbitrageRoutine implements Routine{
     private CoinoneComm coinone = new CoinoneComm();
     private BithumbComm bithumb = new BithumbComm();
 
-    private boolean isTiming = false;
-    private int timingCount = 0;
+    private boolean canNotice = true;
+    private int noticeCount = 0;
 
     @Setter
     private EmailSender emailSender = null;
@@ -39,41 +39,51 @@ public class ArbitrageRoutine implements Routine{
             final Coin coin = Coin.ETC;
             final int MIN_DIFF = MIN_DIFF_ETC;
 
-            boolean needNotice = false;
+            boolean isTiming = false, mustSellBithumb = false;
             long bithumbBuyPrice = bithumb.getMarketPrice(coin, PriceType.BUY);
             long bithumbSellPrice = bithumb.getMarketPrice(coin, PriceType.SELL);
             long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
             long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
             long coinonePrice = 0, bithumbPrice = 0;
 
-            if(isTiming) { // 한번 알림 후에는 60초동안 다시 알림을 주지 않는다.
-                timingCount++;
-                if(timingCount == 6) {
-                    isTiming = false;
-                    timingCount = 0;
+            System.out.printf("[Bithumb] Buy: %d, Sell: %d\n", bithumbBuyPrice, bithumbSellPrice);
+            System.out.printf("[Coinone] Buy: %d, Sell: %d\n", coinoneBuyPrice, coinoneSellPrice);
+            System.out.printf("[현재 차익] %d\n", Math.max(bithumbBuyPrice-coinoneSellPrice, coinoneBuyPrice-bithumbSellPrice));
+
+            if(!canNotice) {
+                noticeCount++;
+                if(noticeCount == 6) {
+                    noticeCount = 0;
+                    canNotice = true;
                 }
             }
-            else if (coinoneSellPrice - bithumbBuyPrice >= MIN_DIFF) {
+
+            if (bithumbBuyPrice - coinoneSellPrice >= MIN_DIFF) {
                 isTiming = true;
-                needNotice = true;
+                mustSellBithumb = true;
                 coinonePrice = coinoneSellPrice;
                 bithumbPrice = bithumbBuyPrice;
             }
-            else if (bithumbSellPrice - coinoneBuyPrice >= MIN_DIFF) {
+            else if (coinoneBuyPrice - bithumbSellPrice >= MIN_DIFF) {
                 isTiming = true;
-                needNotice = true;
+                mustSellBithumb = false;
                 coinonePrice = coinoneBuyPrice;
                 bithumbPrice = bithumbSellPrice;
             }
 
-            if(needNotice) {
+            if(isTiming && canNotice) {
                 String mailMsg =
                     coin.name() + " 거래소 차익 거래 타이밍 입니다.\n" +
+                    (mustSellBithumb ? "빗썸에서 팔고 코인원에서 사세요.\n" : "코인원에서 팔고 빗썸에서 사세요.\n") +
                     "Bithumb: " + bithumbPrice + "\n" +
                     "Coinone: " + coinonePrice + "\n" +
-                    "차액: " + Math.abs(bithumbBuyPrice - coinoneSellPrice);
+                    "차액: " + Math.abs(bithumbPrice - coinonePrice);
                 emailSender.setStringAndReady("Arbitrage", mailMsg);
+                canNotice = false;
+                System.out.println(mailMsg);
             }
+
+            System.out.printf("--------------------------------------------------\n");
         }
         catch (Exception e) {
             e.printStackTrace();

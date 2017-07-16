@@ -20,10 +20,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -75,8 +72,7 @@ public class GmailComm {
      */
     public static Credential authorize() throws IOException {
         // Load client secrets.
-        InputStream in =
-                GmailComm.class.getResourceAsStream("/client_secret.json");
+        InputStream in = new FileInputStream(Config.getResourcePath("client_secret.json"));
         GoogleClientSecrets clientSecrets =
                 GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
