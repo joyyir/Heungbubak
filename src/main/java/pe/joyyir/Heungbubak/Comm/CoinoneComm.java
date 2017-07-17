@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class CoinoneComm {
+public class CoinoneComm implements ArbitrageExchange {
     private final String API_URL = "https://api.coinone.co.kr/";
     private final String TICKER_URL = "ticker?currency=";
     private final String BALANCE_URL = "v2/account/balance/";
@@ -40,15 +40,18 @@ public class CoinoneComm {
         return Integer.valueOf(jsonObject.getString("last"));
     }
 
-    public int getAverageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
+    @Override
+    public ArbitrageMarketPrice getArbitrageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
+        ArbitrageMarketPrice marketPrice = new ArbitrageMarketPrice(0, 0);
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());
         JSONArray orders = jsonObject.getJSONArray(priceType.toString());
         double sum = 0.0;
         double left = quantity;
         for(int i = 0; i < orders.length(); i++) {
             JSONObject order = orders.getJSONObject(i);
-            int price = order.getInt("price");
+            long price = order.getLong("price");
             double qty = order.getDouble("qty");
+            marketPrice.setMaximinimumPrice(price);
 
             if(qty > left) {
                 sum += price * left;
@@ -62,14 +65,17 @@ public class CoinoneComm {
         }
         if(left > 0.0)
             throw new Exception("Too much quantity");
-        return (int)(sum/quantity);
+        marketPrice.setAveragePrice((long)(sum/quantity));
+        return marketPrice;
     }
 
-    public int getMarketPrice(Coin coin, PriceType priceType) throws Exception {
+    @Override
+    public long getMarketPrice(Coin coin, PriceType priceType) throws Exception {
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());
-        return jsonObject.getJSONArray(priceType.toString()).getJSONObject(0).getInt("price");
+        return jsonObject.getJSONArray(priceType.toString()).getJSONObject(0).getLong("price");
     }
 
+    @Override
     public double getBalance(Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + BALANCE_URL;
@@ -229,7 +235,7 @@ public class CoinoneComm {
             /*
             int authNumber;
             comm.twoFactorAuth(CoinoneComm.Coin.BTC);
-            System.out.print("Coinone OTP ¹øÈ£¸¦ ÀÔ·ÂÇÏ¼¼¿ä : ");
+            System.out.print("Coinone OTP ï¿½ï¿½È£ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ : ");
             Scanner sc = new Scanner(System.in);
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
@@ -242,13 +248,14 @@ public class CoinoneComm {
 
             //comm.getMarketPrice(Coin.BTC, PriceType.BUY);
 
-            System.out.println("1°³ »ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 1.0));
-            System.out.println("10°³ »ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10.0));
-            System.out.println("10000°³ »ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10000.0));
-            System.out.println("1°³ ÆÈ¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 1.0));
-            System.out.println("10°³ ÆÈ¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10.0));
-            System.out.println("10000°³ ÆÈ¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10000.0));
-
+            /*
+            System.out.println("1ï¿½ï¿½ ï¿½ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 1.0));
+            System.out.println("10ï¿½ï¿½ ï¿½ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10.0));
+            System.out.println("10000ï¿½ï¿½ ï¿½ì¶§: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10000.0));
+            System.out.println("1ï¿½ï¿½ ï¿½È¶ï¿½: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 1.0));
+            System.out.println("10ï¿½ï¿½ ï¿½È¶ï¿½: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10.0));
+            System.out.println("10000ï¿½ï¿½ ï¿½È¶ï¿½: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10000.0));
+            */
         }
         catch(Exception e) {
             e.printStackTrace();

@@ -1,5 +1,6 @@
 package pe.joyyir.Heungbubak.Comm;
 
+import org.json.JSONArray;
 import pe.joyyir.Heungbubak.Comm.apikey.BithumbApiKey;
 import pe.joyyir.Heungbubak.Const.BankCode;
 import pe.joyyir.Heungbubak.Const.Coin;
@@ -14,7 +15,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BithumbComm {
+public class BithumbComm implements ArbitrageExchange {
     private final String API_URL = "https://api.bithumb.com/";
     private final String TICKER_URL = "public/ticker/";
 
@@ -44,15 +45,46 @@ public class BithumbComm {
         secret = getApikey().getSecret();
     }
 
+    @Override
+    public ArbitrageMarketPrice getArbitrageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
+        ArbitrageMarketPrice marketPrice = new ArbitrageMarketPrice(0, 0);
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "public/orderbook/" + coin.name().toLowerCase());
+        errorCheck(jsonObject, "getAverageMarketPrice");
+        JSONArray orders = jsonObject.getJSONObject("data").getJSONArray(priceType.toString() + 's');
+        double sum = 0.0;
+        double left = quantity;
+        for(int i = 0; i < orders.length(); i++) {
+            JSONObject order = orders.getJSONObject(i);
+            long price = order.getLong("price");
+            double qty = order.getDouble("quantity");
+            marketPrice.setMaximinimumPrice(price);
+
+            if(qty > left) {
+                sum += price * left;
+                left = 0.0;
+                break;
+            }
+            else {
+                sum += price * qty;
+                left -= qty;
+            }
+        }
+        if(left > 0.0)
+            throw new Exception("Too much quantity");
+        marketPrice.setAveragePrice((long)(sum/quantity));
+        return marketPrice;
+    }
+
+    @Override
     public long getMarketPrice(Coin coin, PriceType priceType) throws Exception {
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL+TICKER_URL+coin.name());
 
         String key = "";
         switch (priceType) {
-            case BUY : // °Å·¡ ´ë±â°Ç ÃÖ°í ±¸¸Å°¡
+            case BUY : // ê±°ë˜ ëŒ€ê¸°ê±´ ìµœê³  êµ¬ë§¤ê°€
                 key = "buy_price";
                 break;
-            case SELL: // °Å·¡ ´ë±â°Ç ÃÖ¼Ò ÆÇ¸Å°¡
+            case SELL: // ê±°ë˜ ëŒ€ê¸°ê±´ ìµœì†Œ íŒë§¤ê°€
                 key = "sell_price";
                 break;
         }
@@ -60,6 +92,7 @@ public class BithumbComm {
         return Long.valueOf(jsonObject.getJSONObject("data").getString(key));
     }
 
+    @Override
     public double getBalance(Coin coin) throws Exception {
         double balance;
         String endpoint = "info/balance";
@@ -73,7 +106,7 @@ public class BithumbComm {
             balance = result.getJSONObject("data").getDouble("total_" + coin.name().toLowerCase());
         }
         catch (Exception e) {
-            //throw new Exception(coin.name() + "ÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.\n" + CmnUtil.getStackTraceString(e));
+            //throw new Exception(coin.name() + "ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.\n" + CmnUtil.getStackTraceString(e));
             balance = 0.0;
         }
         return balance;
@@ -109,8 +142,8 @@ public class BithumbComm {
         return result.getString("order_id");
     }
 
-    // ¹Ù·Î µÇ´Â°Ô ¾Æ´Ï´Ù.
-    // ¼ö¼ö·á °Ç´ç 1,000¿ø, Ãâ±İ ÃÖ¼Ò ±İ¾× 5,000¿ø, ÀÏÀÏ Ãâ±İ ÇÑµµ 5000¸¸¿ø, ¿ù Ãâ±İ ÇÑµµ 3¾ï
+    // ë°”ë¡œ ë˜ëŠ”ê²Œ ì•„ë‹ˆë‹¤.
+    // ìˆ˜ìˆ˜ë£Œ ê±´ë‹¹ 1,000ì›, ì¶œê¸ˆ ìµœì†Œ ê¸ˆì•¡ 5,000ì›, ì¼ì¼ ì¶œê¸ˆ í•œë„ 5000ë§Œì›, ì›” ì¶œê¸ˆ í•œë„ 3ì–µ
     public void withdrawalKRW(BankCode bankCode, String account, int quantitiy) throws Exception {
         final String endpoint = "trade/krw_withdrawal";
         Map<String, String> params = new HashMap<>();
@@ -212,15 +245,15 @@ public class BithumbComm {
             CoinoneComm coinComm = new CoinoneComm();
 
             /*
-            comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // ¼ö¼ö·á Æ÷ÇÔ 0.001 BTC
+            comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // ìˆ˜ìˆ˜ë£Œ í¬í•¨ 0.001 BTC
             */
 
             /*
             long bithumbBTCprice = comm.getMarketPrice(BithumbComm.Coin.BTC, PriceType.BUY);
             long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.Coin.BTC);
-            System.out.println("bithumb BTC ½Ã¼¼ : " + bithumbBTCprice);
-            System.out.println("coinone BTC ½Ã¼¼ : " + coinoneBTCprice);
-            System.out.println("Â÷ÀÌ : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
+            System.out.println("bithumb BTC ì‹œì„¸ : " + bithumbBTCprice);
+            System.out.println("coinone BTC ì‹œì„¸ : " + coinoneBTCprice);
+            System.out.println("ì°¨ì´ : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
             */
 
             //comm.makeOrder(OrderType.BUY, Coin.ETC, 19570L, 0.1F);
@@ -234,7 +267,7 @@ public class BithumbComm {
             //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
 
             //comm.getOrderInfo("1499599864512", OrderType.SELL, Coin.ETC, true);
-            System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
+            //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
         }
         catch (Exception e) {
             e.printStackTrace();
