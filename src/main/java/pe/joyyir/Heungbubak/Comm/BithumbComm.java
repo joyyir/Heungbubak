@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import pe.joyyir.Heungbubak.Comm.apikey.BithumbApiKey;
 import pe.joyyir.Heungbubak.Const.BankCode;
 import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
 import pe.joyyir.Heungbubak.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Util.Encryptor;
@@ -21,18 +22,6 @@ public class BithumbComm implements ArbitrageExchange {
 
     public static final String STATUS_CODE_SUCCESS = "0000";
     public static final String STATUS_CODE_CUSTOM = "5600";
-
-    public enum OrderType {
-        BUY("bid"), SELL("ask");
-
-        private String type;
-        OrderType(String type) { this.type = type; }
-
-        @Override
-        public String toString() {
-            return type;
-        }
-    }
 
     @Getter @Setter
     private BithumbApiKey apikey;
@@ -126,13 +115,14 @@ public class BithumbComm implements ArbitrageExchange {
         errorCheck(result, "Sending coin");
     }
 
-    public String makeOrder(OrderType orderType, Coin coin, Long price, Float quantity) throws Exception {
+    @Override
+    public String makeOrder(OrderType orderType, Coin coin, long price, double quantity) throws Exception {
         final String endpoint = "trade/place";
         Map<String, String> params = new HashMap<>();
         params.put("order_currency", coin.name().toUpperCase());
         params.put("Payment_currency", "KRW");
-        params.put("units", quantity.toString());
-        params.put("price", price.toString());
+        params.put("units", String.valueOf(quantity));
+        params.put("price", String.valueOf(price));
         params.put("type", orderType.toString());
 
         JSONObject result = callApi(endpoint, params);

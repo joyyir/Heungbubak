@@ -2,6 +2,7 @@ package pe.joyyir.Heungbubak.Comm;
 
 import pe.joyyir.Heungbubak.Comm.apikey.CoinoneApiKey;
 import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
 import pe.joyyir.Heungbubak.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Util.Encryptor;
@@ -21,8 +22,6 @@ public class CoinoneComm implements ArbitrageExchange {
     private final String TRANSACTION_URL = "v2/transaction/";
 
     public static final Coin[] COIN_ARRAY = { Coin.BTC, Coin.ETC, Coin.ETH };
-
-    public enum OrderType { BUY, SELL }
 
     @Setter @Getter
     private CoinoneApiKey apikey;
@@ -161,6 +160,7 @@ public class CoinoneComm implements ArbitrageExchange {
         return desc;
     }
 
+    @Override
     public String makeOrder(OrderType orderType, Coin coin, long price, double quantity) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = "";
