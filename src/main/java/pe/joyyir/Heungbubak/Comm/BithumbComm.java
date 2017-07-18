@@ -188,7 +188,7 @@ public class BithumbComm implements ArbitrageExchange {
     }
 
     private JSONObject callApi(String endpoint, Map<String, String> params) throws Exception {
-        long nonce = CmnUtil.nsTime();
+        long nonce = CmnUtil.msTime();
 
         String strParams = HTTPUtil.paramsBuilder(params);
         String encodedParams = HTTPUtil.encodeURIComponent(strParams);
@@ -251,10 +251,11 @@ public class BithumbComm implements ArbitrageExchange {
 
             //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
 
-            //String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000L, 1F);
-            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            //comm.getOrderInfo(orderId, OrderType.BUY, Coin.ETC, false);
-            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
+            double krw = comm.getBalance(Coin.BTC);
+            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 1);
+            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+            comm.getOrderInfo(orderId, OrderType.BUY, Coin.ETC, false);
+            comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
 
             //comm.getOrderInfo("1499599864512", OrderType.SELL, Coin.ETC, true);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));

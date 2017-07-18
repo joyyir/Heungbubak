@@ -6,10 +6,7 @@ import org.json.JSONObject;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -84,7 +81,8 @@ public class HTTPUtil {
         wr.flush();
         wr.close();
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        InputStream inputStream = (conn.getResponseCode() == 200) ? conn.getInputStream() : conn.getErrorStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
         String inputLine;
         StringBuffer response = new StringBuffer();
 
@@ -92,6 +90,9 @@ public class HTTPUtil {
             response.append(inputLine);
         }
         in.close();
+
+        if(conn.getResponseCode() != 200)
+            throw new Exception("error: " + conn.getResponseCode() + ", message: " + response.toString());
 
         return response.toString();
     }

@@ -2,6 +2,7 @@ package pe.joyyir.Heungbubak.Routine;
 
 import pe.joyyir.Heungbubak.Comm.*;
 import pe.joyyir.Heungbubak.Const.Coin;
+import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
 import lombok.Setter;
 
@@ -154,7 +155,7 @@ public class ArbitrageRoutine implements Routine{
 
         // step 3. 거래 가능한 보유 수량 확인
         double sellQty = sellExchange.getBalance(coin);
-        double buyQty = sellExchange.getBalance(Coin.KRW) / sellPrice;
+        double buyQty = buyExchange.getBalance(Coin.KRW) / sellPrice;
         double qty = Math.min(sellQty, buyQty);
         long expectedProfit = (long)((sellPrice-buyPrice) * qty);
         if(DEBUG) {
@@ -193,12 +194,54 @@ public class ArbitrageRoutine implements Routine{
         }
 
         if(avgDiff < MIN_DIFF || minmaxDiff < MIN_DIFF) {
-            System.out.printf("\t=> 차익이 충분히 나지 않으므로 거래를 취소합니다.");
+            System.out.printf("\t=> 차익이 충분히 나지 않으므로 거래를 취소합니다.\n");
             return;
         }
         else {
-            System.out.printf("\t=> 차익이 충분하므로 거래를 진행합니다.");
+            System.out.printf("\t=> 차익이 충분하므로 거래를 진행합니다.\n");
         }
+
+        if(true) {
+            throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
+        }
+
+        // step 6. 거래 진행
+        System.out.printf("\nstep 6. 거래 진행\n");
+        String sellOrderId = "", buyOrderId = "";
+        int sellTry = 0, buyTry = 0;
+        boolean isMakeSellOrderSuccess = false, isMakeBuyOrderSuccess = false;
+
+        //     6-1. 판매 주문 만들기
+        for(int trial = 0; trial < 5; trial++) {
+            try {
+                sellOrderId = sellExchange.makeOrder(OrderType.SELL, coin, sellPrice, qty);
+                isMakeSellOrderSuccess = true;
+                break;
+            }
+            catch (Exception e) {
+                System.out.printf("\ttrial %d: %s에서 판매 주문 만들기 실패\n", trial+1, DEBUG_SELL_EXCHANGE);
+            }
+        }
+        if(!isMakeSellOrderSuccess) {
+            throw new Exception(DEBUG_SELL_EXCHANGE + "에서 판매 주문 만들기 실패");
+        }
+        System.out.printf("\t판매 주문 만들기 성공\n");
+
+        //     6-2. 구매 주문 만들기
+        for(int trial = 0; trial < 5; trial++) {
+            try {
+                buyOrderId = buyExchange.makeOrder(OrderType.BUY, coin, buyPrice, qty);
+                isMakeBuyOrderSuccess = true;
+                break;
+            }
+            catch (Exception e) {
+                System.out.printf("\ttrial %d: %s에서 구매 주문 만들기 실패\n", trial+1, DEBUG_BUY_EXCHANGE);
+            }
+        }
+        if(!isMakeBuyOrderSuccess) {
+            throw new Exception(DEBUG_SELL_EXCHANGE + "에서 판매 주문 만들기 실패");
+        }
+        System.out.printf("\t구매 주문 만들기 성공\n");
     }
 
     public static void main(String[] args) {
