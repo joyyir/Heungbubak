@@ -147,33 +147,38 @@ public class BithumbComm implements ArbitrageExchange {
         errorCheck(result, "Withdrawal KRW");
     }
 
-    public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
-        try {
-            JSONObject result = getOrderInfo(orderId, orderType, coin, true);
-            return (result != null);
-        }
-        catch (Exception e) {
+    public JSONObject getOrderInfo(String orderId, OrderType orderType, Coin coin) throws Exception {
+        final String ENDPOINT_FINISHED = "info/order_detail";
+        final String ENDPOINT_IN_PROGRESS = "info/orders";
+        final String[] ENDPOINTS = { ENDPOINT_FINISHED, ENDPOINT_IN_PROGRESS };
+        JSONObject result = null;
+
+        for(String endpoint : ENDPOINTS) {
             try {
-                JSONObject result = getOrderInfo(orderId, orderType, coin, false);
-                return (result == null);
+                Map<String, String> params = new HashMap<>();
+                params.put("order_id", orderId);
+                params.put("type", orderType.toString());
+                params.put("currency", coin.name().toUpperCase());
+
+                result = callApi(endpoint, params);
+                errorCheck(result, "getOrderInfo");
+                break;
             }
-            catch (Exception e2) {
-                throw e2;
-            }
+            catch (Exception e) { }
         }
+        return result;
     }
 
-    public JSONObject getOrderInfo(String orderId, OrderType orderType, Coin coin, boolean finished) throws Exception {
-        final String endpoint = finished ? "info/order_detail" : "info/orders";
+    public boolean isOrderCompleted(JSONObject result) throws Exception {
+        if(result.getJSONArray("data").getJSONObject(0).isNull("total"))
+            return false;
+        else
+            return true;
+    }
 
-        Map<String, String> params = new HashMap<>();
-        params.put("order_id", orderId);
-        params.put("type", orderType.toString());
-        params.put("currency", coin.name().toUpperCase());
-
-        JSONObject result = callApi(endpoint, params);
-        errorCheck(result, "getOrderInfo");
-        return result;
+    public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
+        JSONObject result = getOrderInfo(orderId, orderType, coin);
+        return isOrderCompleted(result);
     }
 
     public void cancelOrder(String orderId, OrderType orderType, Coin coin) throws Exception {
@@ -251,13 +256,16 @@ public class BithumbComm implements ArbitrageExchange {
 
             //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
 
-            double krw = comm.getBalance(Coin.BTC);
-            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 1);
+            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
             System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            comm.getOrderInfo(orderId, OrderType.BUY, Coin.ETC, false);
             comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
+//            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
 
-            //comm.getOrderInfo("1499599864512", OrderType.SELL, Coin.ETC, true);
+            //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
+            //System.out.println(comm.isOrderCompleted(result));
+            System.out.println(comm.isOrderCompleted("1500384872078", OrderType.BUY, Coin.ETC));
+
+            //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
         }
         catch (Exception e) {

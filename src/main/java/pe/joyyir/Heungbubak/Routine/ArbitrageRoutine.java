@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 3000;
-    private final int MIN_DIFF_ETC = 130;
+    private final int MIN_DIFF_ETC = 200;
     private final int MIN_DIFF_XRP = 3;
 
     private final String BITHUMB_BTC_WALLET_ADDRESS = "1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM";
@@ -93,6 +93,7 @@ public class ArbitrageRoutine implements Routine{
     public void makeMoney() throws Exception {
         final Coin coin = Coin.ETC;
         final int MIN_DIFF = 0;
+        final long MIN_PROFIT = 50000;
 
         final boolean DEBUG = true;
         String DEBUG_SELL_EXCHANGE = "", DEBUG_BUY_EXCHANGE = "";
@@ -165,6 +166,11 @@ public class ArbitrageRoutine implements Routine{
             System.out.printf("\t=> 예상 이익: %d KRW\n", expectedProfit);
         }
 
+        if(expectedProfit < MIN_PROFIT) {
+            if(DEBUG) System.out.printf("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
+            return;
+        }
+
         /*
         // step 4. 거래 승인
         System.out.printf("\nstep 4. 거래 승인\n");
@@ -184,7 +190,9 @@ public class ArbitrageRoutine implements Routine{
         ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
         ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
         long avgDiff = sellArbitPrice.getAveragePrice()-buyArbitPrice.getAveragePrice();
-        long minmaxDiff = sellArbitPrice.getMaximinimumPrice()-buyArbitPrice.getMaximinimumPrice();
+        long realSellPrice = sellArbitPrice.getMaximinimumPrice();
+        long realBuyPrice = buyArbitPrice.getMaximinimumPrice();
+        long minmaxDiff = realSellPrice - realBuyPrice;
         if(DEBUG) {
             System.out.printf("\nstep 5. 실제 거래 가격 산정\n");
             System.out.printf("\t%f개 거래시,\n", qty);
@@ -214,7 +222,7 @@ public class ArbitrageRoutine implements Routine{
         //     6-1. 판매 주문 만들기
         for(int trial = 0; trial < 5; trial++) {
             try {
-                sellOrderId = sellExchange.makeOrder(OrderType.SELL, coin, sellPrice, qty);
+                sellOrderId = sellExchange.makeOrder(OrderType.SELL, coin, realSellPrice, qty);
                 isMakeSellOrderSuccess = true;
                 break;
             }
@@ -230,7 +238,7 @@ public class ArbitrageRoutine implements Routine{
         //     6-2. 구매 주문 만들기
         for(int trial = 0; trial < 5; trial++) {
             try {
-                buyOrderId = buyExchange.makeOrder(OrderType.BUY, coin, buyPrice, qty);
+                buyOrderId = buyExchange.makeOrder(OrderType.BUY, coin, realBuyPrice, qty);
                 isMakeBuyOrderSuccess = true;
                 break;
             }
