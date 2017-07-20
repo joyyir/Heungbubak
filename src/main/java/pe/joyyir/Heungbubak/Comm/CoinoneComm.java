@@ -187,13 +187,15 @@ public class CoinoneComm implements ArbitrageExchange {
         return result.getString("orderId");
     }
 
-    public boolean isOrderComplete(String orderId, Coin coin) throws Exception {
+    @Override
+    public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, coin);
         String status = result.getString("status"); // live, filled, partially_filled
         return status.equals("filled");
     }
 
-    public void cancelOrder(String orderId, int krwPrice, double quantity, boolean isSell, Coin coin) throws Exception {
+    @Override
+    public void cancelOrder(String orderId, OrderType orderType, Coin coin, long krwPrice, double quantity) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/cancel/";
 
@@ -202,8 +204,7 @@ public class CoinoneComm implements ArbitrageExchange {
         params.put("order_id", orderId);
         params.put("price", krwPrice);
         params.put("qty", quantity);
-        int isAsk = isSell ? 1 : 0;
-        params.put("is_ask", isAsk);
+        params.put("is_ask", (orderType == OrderType.SELL) ? 1 : 0);
         params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
 

@@ -3,6 +3,7 @@ package pe.joyyir.Heungbubak.Routine;
 import pe.joyyir.Heungbubak.Comm.*;
 import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageTrade;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
@@ -215,41 +216,16 @@ public class ArbitrageRoutine implements Routine{
 
         // step 6. 거래 진행
         System.out.printf("\nstep 6. 거래 진행\n");
-        String sellOrderId = "", buyOrderId = "";
-        int sellTry = 0, buyTry = 0;
-        boolean isMakeSellOrderSuccess = false, isMakeBuyOrderSuccess = false;
-
-        //     6-1. 판매 주문 만들기
-        for(int trial = 0; trial < 5; trial++) {
-            try {
-                sellOrderId = sellExchange.makeOrder(OrderType.SELL, coin, realSellPrice, qty);
-                isMakeSellOrderSuccess = true;
-                break;
-            }
-            catch (Exception e) {
-                System.out.printf("\ttrial %d: %s에서 판매 주문 만들기 실패\n", trial+1, DEBUG_SELL_EXCHANGE);
-            }
-        }
-        if(!isMakeSellOrderSuccess) {
-            throw new Exception(DEBUG_SELL_EXCHANGE + "에서 판매 주문 만들기 실패");
-        }
-        System.out.printf("\t판매 주문 만들기 성공\n");
-
-        //     6-2. 구매 주문 만들기
-        for(int trial = 0; trial < 5; trial++) {
-            try {
-                buyOrderId = buyExchange.makeOrder(OrderType.BUY, coin, realBuyPrice, qty);
-                isMakeBuyOrderSuccess = true;
-                break;
-            }
-            catch (Exception e) {
-                System.out.printf("\ttrial %d: %s에서 구매 주문 만들기 실패\n", trial+1, DEBUG_BUY_EXCHANGE);
-            }
-        }
-        if(!isMakeBuyOrderSuccess) {
-            throw new Exception(DEBUG_SELL_EXCHANGE + "에서 판매 주문 만들기 실패");
-        }
-        System.out.printf("\t구매 주문 만들기 성공\n");
+        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, qty);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, qty);
+        sellTrade.setOppositeTrade(buyTrade);
+        buyTrade.setOppositeTrade(sellTrade);
+        Thread sellThread = new Thread(sellTrade);
+        Thread buyThread = new Thread(buyTrade);
+        sellThread.start();
+        buyThread.start();
+        sellThread.join();
+        buyThread.join();
     }
 
     public static void main(String[] args) {

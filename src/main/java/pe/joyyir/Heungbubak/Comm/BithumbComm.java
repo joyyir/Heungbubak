@@ -178,12 +178,14 @@ public class BithumbComm implements ArbitrageExchange {
             return true;
     }
 
+    @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, orderType, coin);
         return isOrderCompleted(result);
     }
 
-    public void cancelOrder(String orderId, OrderType orderType, Coin coin) throws Exception {
+    @Override
+    public void cancelOrder(String orderId, OrderType orderType, Coin coin, long krwPrice, double quantity) throws Exception {
         final String endpoint = "trade/cancel";
         Map<String, String> params = new HashMap<>();
         params.put("type", orderType.toString());
@@ -260,7 +262,7 @@ public class BithumbComm implements ArbitrageExchange {
 
             String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
             System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
+            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
 //            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
 
             //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
