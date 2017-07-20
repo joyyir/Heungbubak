@@ -1,6 +1,8 @@
 package pe.joyyir.Heungbubak.Comm;
 
 import org.json.JSONArray;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
 import pe.joyyir.Heungbubak.Comm.apikey.BithumbApiKey;
 import pe.joyyir.Heungbubak.Const.BankCode;
 import pe.joyyir.Heungbubak.Const.Coin;

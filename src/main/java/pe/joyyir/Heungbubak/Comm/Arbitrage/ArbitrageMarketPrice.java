@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Comm.Arbitrage;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

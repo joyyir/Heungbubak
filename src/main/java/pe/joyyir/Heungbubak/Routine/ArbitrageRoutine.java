@@ -1,12 +1,12 @@
 package pe.joyyir.Heungbubak.Routine;
 
 import pe.joyyir.Heungbubak.Comm.*;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
 import lombok.Setter;
-
-import java.util.Scanner;
 
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;

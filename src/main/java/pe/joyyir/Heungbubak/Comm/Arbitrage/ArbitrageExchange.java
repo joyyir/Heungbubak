@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Comm.Arbitrage;
 
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;

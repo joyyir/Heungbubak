@@ -1,5 +1,7 @@
 package pe.joyyir.Heungbubak.Comm;
 
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
 import pe.joyyir.Heungbubak.Comm.apikey.CoinoneApiKey;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
