@@ -4,6 +4,7 @@ import pe.joyyir.Heungbubak.Comm.*;
 import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
 import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageTrade;
+import pe.joyyir.Heungbubak.Comm.Arbitrage.DummyTrade;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
@@ -112,11 +113,11 @@ public class ArbitrageRoutine implements Routine{
         long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
         long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
 
-        if(DEBUG) {
+        if (DEBUG) {
             System.out.printf("step 1. 시세 확인\n");
             System.out.printf("\t[Bithumb] Buy: %d, Sell: %d\n", bithumbBuyPrice, bithumbSellPrice);
             System.out.printf("\t[Coinone] Buy: %d, Sell: %d\n", coinoneBuyPrice, coinoneSellPrice);
-            System.out.printf("\t=> 현재 차익: %d\n", Math.max(bithumbBuyPrice-coinoneSellPrice, coinoneBuyPrice-bithumbSellPrice));
+            System.out.printf("\t=> 현재 차익: %d\n", Math.max(bithumbBuyPrice - coinoneSellPrice, coinoneBuyPrice - bithumbSellPrice));
         }
 
         // step 2. 거래 타이밍인지 확인
@@ -126,18 +127,17 @@ public class ArbitrageRoutine implements Routine{
             sellPrice = bithumbBuyPrice;
             buyExchange = coinone;
             buyPrice = coinoneSellPrice;
-            if(DEBUG) {
+            if (DEBUG) {
                 System.out.printf("\nstep 2. 거래 타이밍인지 확인\n");
                 System.out.printf("\t빗썸에서 팔고 코인원에서 산다.\n");
             }
-        }
-        else if (coinoneBuyPrice - bithumbSellPrice >= MIN_DIFF) { // 코인원에서 팔고 빗썸에서 산다.
+        } else if (coinoneBuyPrice - bithumbSellPrice >= MIN_DIFF) { // 코인원에서 팔고 빗썸에서 산다.
             isTiming = true;
             sellExchange = coinone;
             sellPrice = coinoneBuyPrice;
             buyExchange = bithumb;
             buyPrice = bithumbSellPrice;
-            if(DEBUG) {
+            if (DEBUG) {
                 DEBUG_SELL_EXCHANGE = "코인원";
                 DEBUG_BUY_EXCHANGE = "빗썸";
                 System.out.printf("\nstep 2. 거래 타이밍인지 확인\n");
@@ -145,8 +145,8 @@ public class ArbitrageRoutine implements Routine{
             }
         }
 
-        if(!isTiming) {
-            if(DEBUG) {
+        if (!isTiming) {
+            if (DEBUG) {
                 DEBUG_SELL_EXCHANGE = "빗썸";
                 DEBUG_BUY_EXCHANGE = "코인원";
                 System.out.printf("\nstep 2. 거래 타이밍인지 확인\n");
@@ -159,16 +159,16 @@ public class ArbitrageRoutine implements Routine{
         double sellQty = sellExchange.getBalance(coin);
         double buyQty = buyExchange.getBalance(Coin.KRW) / sellPrice;
         double qty = Math.min(sellQty, buyQty);
-        long expectedProfit = (long)((sellPrice-buyPrice) * qty);
-        if(DEBUG) {
+        long expectedProfit = (long) ((sellPrice - buyPrice) * qty);
+        if (DEBUG) {
             System.out.printf("\nstep 3. 거래 가능한 보유 수량 확인\n");
             System.out.printf("\t%s에서 %f개 판매 가능, %s에서 %f개 구매 가능\n", DEBUG_SELL_EXCHANGE, sellQty, DEBUG_BUY_EXCHANGE, buyQty);
             System.out.printf("\t=> 최대 거래량: %f개\n", qty);
             System.out.printf("\t=> 예상 이익: %d KRW\n", expectedProfit);
         }
 
-        if(expectedProfit < MIN_PROFIT) {
-            if(DEBUG) System.out.printf("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
+        if (expectedProfit < MIN_PROFIT) {
+            if (DEBUG) System.out.printf("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
             return;
         }
 
@@ -190,11 +190,11 @@ public class ArbitrageRoutine implements Routine{
         // step 5. 실제 거래 가격 산정
         ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
         ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
-        long avgDiff = sellArbitPrice.getAveragePrice()-buyArbitPrice.getAveragePrice();
+        long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
         long realSellPrice = sellArbitPrice.getMaximinimumPrice();
         long realBuyPrice = buyArbitPrice.getMaximinimumPrice();
         long minmaxDiff = realSellPrice - realBuyPrice;
-        if(DEBUG) {
+        if (DEBUG) {
             System.out.printf("\nstep 5. 실제 거래 가격 산정\n");
             System.out.printf("\t%f개 거래시,\n", qty);
             System.out.printf("\t%s에서 평균가 %d, 최저가 %d에 판매\n", DEBUG_SELL_EXCHANGE, sellArbitPrice.getAveragePrice(), sellArbitPrice.getMaximinimumPrice());
@@ -202,15 +202,14 @@ public class ArbitrageRoutine implements Routine{
             System.out.printf("\t평균가 차익: %d, 최저최고가 차익: %d\n", avgDiff, minmaxDiff);
         }
 
-        if(avgDiff < MIN_DIFF || minmaxDiff < MIN_DIFF) {
+        if (avgDiff < MIN_DIFF || minmaxDiff < MIN_DIFF) {
             System.out.printf("\t=> 차익이 충분히 나지 않으므로 거래를 취소합니다.\n");
             return;
-        }
-        else {
+        } else {
             System.out.printf("\t=> 차익이 충분하므로 거래를 진행합니다.\n");
         }
 
-        if(true) {
+        if (true) {
             throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
         }
 
@@ -220,18 +219,24 @@ public class ArbitrageRoutine implements Routine{
         ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, qty);
         sellTrade.setOppositeTrade(buyTrade);
         buyTrade.setOppositeTrade(sellTrade);
-        Thread sellThread = new Thread(sellTrade);
-        Thread buyThread = new Thread(buyTrade);
-        sellThread.start();
-        buyThread.start();
-        sellThread.join();
-        buyThread.join();
+        sellTrade.start();
+        buyTrade.start();
+    }
+
+    void testTrade() {
+        ArbitrageTrade sellTrade = new ArbitrageTrade(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100);
+        sellTrade.setOppositeTrade(buyTrade);
+        buyTrade.setOppositeTrade(sellTrade);
+        sellTrade.start();
+        buyTrade.start();
     }
 
     public static void main(String[] args) {
         try {
             ArbitrageRoutine arbitrage = new ArbitrageRoutine(null);
-            arbitrage.makeMoney();
+            //arbitrage.makeMoney();
+            arbitrage.testTrade();
         }
         catch (Exception e) {
             e.printStackTrace();

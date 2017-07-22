@@ -190,7 +190,7 @@ public class CoinoneComm implements ArbitrageExchange {
     @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, coin);
-        String status = result.getString("status"); // live, filled, partially_filled
+        String status = result.getString("tradeStatus"); // live, filled, partially_filled
         return status.equals("filled");
     }
 

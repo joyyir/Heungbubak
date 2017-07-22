@@ -214,12 +214,12 @@ public class BithumbComm implements ArbitrageExchange {
     }
 
     private void errorCheck(JSONObject result, String funcName) throws Exception {
-        String status = result.getString("status");
+        String status = result.getString("tradeStatus");
         if (!status.equals(STATUS_CODE_SUCCESS)) {
             String customMsg = "";
             if(status.equals(STATUS_CODE_CUSTOM))
                 customMsg = result.getString("message");
-            throw new Exception(funcName + " failed! (status:" + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
+            throw new Exception(funcName + " failed! (tradeStatus:" + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
         }
     }
 

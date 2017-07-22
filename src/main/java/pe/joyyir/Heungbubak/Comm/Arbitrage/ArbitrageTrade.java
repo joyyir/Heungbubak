@@ -1,6 +1,5 @@
 package pe.joyyir.Heungbubak.Comm.Arbitrage;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Getter;
 import lombok.Setter;
 import pe.joyyir.Heungbubak.Const.Coin;
@@ -10,8 +9,22 @@ import pe.joyyir.Heungbubak.Util.CmnUtil;
 import java.util.Date;
 
 public class ArbitrageTrade implements Runnable {
-    private Boolean isOrderMade;
-    private Boolean isOrderCompleted;
+    private enum ThreadStatus {
+        NEW, RUNNING, SUSPENDED, STOPPED;
+    }
+    private enum TradeStatus {
+        START(1), ORDER_MADE(2), ORDER_CANCELED(3), ORDER_COMPLETED(4);
+
+        @Getter
+        private int step;
+        TradeStatus (int step) {
+            this.step = step;
+        }
+    }
+    @Getter @Setter
+    private ThreadStatus threadStatus;
+    @Getter @Setter
+    private TradeStatus tradeStatus;
     @Getter @Setter
     private ArbitrageExchange exchange;
     @Getter @Setter
@@ -26,13 +39,15 @@ public class ArbitrageTrade implements Runnable {
     ArbitrageTrade oppositeTrade;
     @Getter @Setter
     String orderId;
+    @Getter
+    private Thread thread;
 
     public boolean isOrderMade() {
-        return isOrderMade.booleanValue();
+        return tradeStatus.getStep() >= TradeStatus.ORDER_MADE.getStep();
     }
 
     public boolean isOrderCompleted() {
-        return isOrderCompleted.booleanValue();
+        return tradeStatus.getStep() >= TradeStatus.ORDER_COMPLETED.getStep();
     }
 
     private void log(String str) {
@@ -41,8 +56,8 @@ public class ArbitrageTrade implements Runnable {
     }
 
     public ArbitrageTrade(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity) {
-        isOrderMade = false;
-        isOrderCompleted = false;
+        setThreadStatus(ThreadStatus.NEW);
+        setTradeStatus(TradeStatus.START);
         this.exchange = exchange;
         this.orderType = orderType;
         this.coin = coin;
@@ -50,17 +65,54 @@ public class ArbitrageTrade implements Runnable {
         this.quantity = quantity;
         this.oppositeTrade = null;
         this.orderId = null;
+        this.thread = new Thread(this);
     }
+
+    public void start() {
+        setThreadStatus(ThreadStatus.RUNNING);
+        thread.start();
+    }
+
+    public void stop() {
+        setThreadStatus(ThreadStatus.STOPPED);
+    }
+
 
     @Override
     public void run() {
         try {
+            if(threadStatus == ThreadStatus.STOPPED)
+                return;
             makeOrder();
-            log("거래 생성 완료");
         }
         catch (Exception e) {
             log("거래 생성 실패");
             if(oppositeTrade != null) {
+                synchronized (oppositeTrade.getTradeStatus()) {
+                    switch (oppositeTrade.getTradeStatus()) {
+                        case START:
+                            oppositeTrade.stop();
+                            break;
+                        case ORDER_MADE:
+                            log("상대편 거래가 진행 중이므로 상대편 거래 취소 진행");
+                            try {
+                                oppositeTrade.tryCancelOrder();
+                            }
+                            catch (Exception e3) {
+                                e3.printStackTrace();
+                            }
+                            break;
+                        case ORDER_CANCELED:
+                            break;
+                        case ORDER_COMPLETED:
+                            log("상대편 거래가 완료되었으므로 상대편 거래소에서 역 거래 진행");
+                            // TODO : oppositeTrade에 대한 역 거래 진행
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                /*
                 if(oppositeTrade.isOrderMade()) {
                     if(oppositeTrade.isOrderCompleted()) {
                         log("상대편 거래가 완료되었으므로 상대편 거래소에서 역 거래 진행");
@@ -82,6 +134,7 @@ public class ArbitrageTrade implements Runnable {
                 else {
                     log("상대편 거래가 만들어지지 않음");
                 }
+                */
             }
             else {
                 log("상대편 거래가 설정되지 않음");
@@ -91,13 +144,11 @@ public class ArbitrageTrade implements Runnable {
 
         try {
             waitOrderCompleted();
-            log("거래 성사 완료");
         }
         catch (Exception e) { // 제한 시간 내에 거래가 성사되지 않음
             try {
                 log("거래가 제한 시간 내에 성사되지 않아 거래 취소 진행");
                 tryCancelOrder();
-                log("거래 취소 완료");
             }
             catch (Exception e2) {
                 log("거래 취소 실패! 사용자 확인 필요!!!");
@@ -107,40 +158,49 @@ public class ArbitrageTrade implements Runnable {
     }
 
     private void makeOrder() throws Exception {
-        synchronized (isOrderMade) {
+        synchronized (tradeStatus) {
             orderId = exchange.makeOrder(orderType, coin, price, quantity);
-            isOrderMade = true;
+            setTradeStatus(TradeStatus.ORDER_MADE);
+            log("거래 생성 완료");
+            tradeStatus.notify();
         }
     }
 
     private void waitOrderCompleted() throws Exception {
-        for(int trial = 0; trial < 5; trial++) {
-            try {
-                synchronized (isOrderCompleted) {
+        synchronized (tradeStatus) {
+            for(int trial = 0; trial < 5; trial++) {
+                try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
-                        isOrderCompleted = true;
+                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                        log("거래 성사 완료");
                         break;
                     }
                 }
+                catch (Exception e) { }
             }
-            catch (Exception e) { }
-        }
-        if(!isOrderCompleted()) {
-            throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다.");
+
+            if(!isOrderCompleted()) {
+                tradeStatus.notify();
+                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다.");
+            }
+
+            tradeStatus.notify();
         }
     }
 
     private void tryCancelOrder() throws Exception {
-        for(int trial = 0; trial < 5; trial++) {
-            try {
-                synchronized (isOrderMade) {
+        synchronized (tradeStatus) {
+            for (int trial = 0; trial < 5; trial++) {
+                try {
                     exchange.cancelOrder(orderId, orderType, coin, price, quantity);
-                    isOrderMade = false;
-                }
-                return;
+                    setTradeStatus(TradeStatus.ORDER_CANCELED);
+                    log("거래 취소 완료");
+                    tradeStatus.notify();
+                    return;
+                } catch (Exception e) { }
             }
-            catch (Exception e) { }
+            //tradeStatus.notify();
+            throw new Exception("취소 실패");
         }
-        throw new Exception("취소 실패");
     }
 }
