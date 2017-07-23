@@ -51,7 +51,8 @@ public class HTTPUtil {
 //            throw new Exception();
         }
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        InputStream inputStream = (conn.getResponseCode() == 200) ? conn.getInputStream() : conn.getErrorStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
         String inputLine;
         StringBuffer response = new StringBuffer();
 
@@ -59,6 +60,9 @@ public class HTTPUtil {
             response.append(inputLine);
         }
         in.close();
+
+        if(conn.getResponseCode() != 200)
+            throw new Exception("error: " + conn.getResponseCode() + ", message: " + response.toString());
 
         return response.toString();
     }

@@ -81,9 +81,28 @@ public class ArbitrageTrade implements Runnable {
     @Override
     public void run() {
         try {
+            makeOrder();
+        }
+        catch (Exception e) {
+            // 에러 처리
+            return;
+        }
+
+        try {
+            waitOrderCompleted();
+        }
+        catch (Exception e) {
+            // 에러 처리
+            return;
+        }
+    }
+
+    public void run2() {
+        try {
             if(threadStatus == ThreadStatus.STOPPED)
                 return;
             makeOrder();
+            if(isStopRequired()) return;
         }
         catch (Exception e) {
             log("거래 생성 실패");
@@ -201,6 +220,22 @@ public class ArbitrageTrade implements Runnable {
             }
             //tradeStatus.notify();
             throw new Exception("취소 실패");
+        }
+    }
+
+    private boolean isStopRequired() {
+        if(threadStatus == ThreadStatus.NEW || threadStatus == ThreadStatus.RUNNING) {
+            if(tradeStatus == TradeStatus.ORDER_COMPLETED || tradeStatus == TradeStatus.ORDER_CANCELED) {
+                return true;
+            }
+            else
+                return false;
+        }
+        else if(threadStatus == ThreadStatus.STOPPED) {
+            return true;
+        }
+        else {
+            return false;
         }
     }
 }

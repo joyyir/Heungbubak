@@ -12,9 +12,14 @@ import lombok.Setter;
 
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
-    private final int MIN_DIFF_ETH = 3000;
-    private final int MIN_DIFF_ETC = 200;
-    private final int MIN_DIFF_XRP = 3;
+    private final int MIN_DIFF_ETH = 2000;
+    private final int MIN_DIFF_ETC = 100;
+    private final int MIN_DIFF_XRP = 2;
+
+    private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP};
+    private final int[] DIFF_ARR = {MIN_DIFF_BTC, MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
+    private boolean[] canNoticeArr = {true, true, true, true};
+    private int[] noticeCountArr = {0, 0, 0, 0};
 
     private final String BITHUMB_BTC_WALLET_ADDRESS = "1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM";
     private final String COINONE_BTC_WALLET_ADDRESS = "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59";
@@ -22,9 +27,6 @@ public class ArbitrageRoutine implements Routine{
 
     private CoinoneComm coinone = new CoinoneComm();
     private BithumbComm bithumb = new BithumbComm();
-
-    private boolean canNotice = true;
-    private int noticeCount = 0;
 
     @Setter
     private EmailSender emailSender = null;
@@ -35,61 +37,68 @@ public class ArbitrageRoutine implements Routine{
 
     @Override
     public void run() {
+        String mailMsg = "";
+
         try {
-            // config
-            final Coin coin = Coin.ETC;
-            final int MIN_DIFF = MIN_DIFF_ETC;
+            for(int i = 0; i < COIN_ARR.length; i++) {
+                final Coin coin = COIN_ARR[i];
+                final int minDiff = DIFF_ARR[i];
 
-            boolean isTiming = false, mustSellBithumb = false;
-            long bithumbBuyPrice = bithumb.getMarketPrice(coin, PriceType.BUY);
-            long bithumbSellPrice = bithumb.getMarketPrice(coin, PriceType.SELL);
-            long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
-            long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
-            long coinonePrice = 0, bithumbPrice = 0;
+                boolean isTiming = false, mustSellBithumb = false;
+                long bithumbBuyPrice = bithumb.getMarketPrice(coin, PriceType.BUY);
+                long bithumbSellPrice = bithumb.getMarketPrice(coin, PriceType.SELL);
+                long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
+                long coinoneSellPrice = coinone.getMarketPrice(coin, PriceType.SELL);
+                long coinonePrice = 0, bithumbPrice = 0;
 
-            System.out.printf("[Bithumb] Buy: %d, Sell: %d\n", bithumbBuyPrice, bithumbSellPrice);
-            System.out.printf("[Coinone] Buy: %d, Sell: %d\n", coinoneBuyPrice, coinoneSellPrice);
-            System.out.printf("[현재 차익] %d\n", Math.max(bithumbBuyPrice-coinoneSellPrice, coinoneBuyPrice-bithumbSellPrice));
+                System.out.printf("%s\n", coin.name());
+                System.out.printf("[Bithumb] Buy: %d, Sell: %d\n", bithumbBuyPrice, bithumbSellPrice);
+                System.out.printf("[Coinone] Buy: %d, Sell: %d\n", coinoneBuyPrice, coinoneSellPrice);
+                System.out.printf("[현재 차익] %d\n", Math.max(bithumbBuyPrice - coinoneSellPrice, coinoneBuyPrice - bithumbSellPrice));
 
-            if(!canNotice) {
-                noticeCount++;
-                if(noticeCount == 6) {
-                    noticeCount = 0;
-                    canNotice = true;
+                if (!canNoticeArr[i]) {
+                    noticeCountArr[i]++;
+                    if (noticeCountArr[i] == 6) {
+                        noticeCountArr[i] = 0;
+                        canNoticeArr[i] = true;
+                    }
                 }
+
+                if (bithumbBuyPrice - coinoneSellPrice >= minDiff) {
+                    isTiming = true;
+                    mustSellBithumb = true;
+                    coinonePrice = coinoneSellPrice;
+                    bithumbPrice = bithumbBuyPrice;
+                } else if (coinoneBuyPrice - bithumbSellPrice >= minDiff) {
+                    isTiming = true;
+                    mustSellBithumb = false;
+                    coinonePrice = coinoneBuyPrice;
+                    bithumbPrice = bithumbSellPrice;
+                }
+
+                if (isTiming && canNoticeArr[i]) {
+                    mailMsg +=
+                            coin.name() + " 거래소 차익 거래 타이밍 입니다.\n" +
+                            (mustSellBithumb ? "빗썸에서 팔고 코인원에서 사세요.\n" : "코인원에서 팔고 빗썸에서 사세요.\n") +
+                            "Bithumb: " + bithumbPrice + "\n" +
+                            "Coinone: " + coinonePrice + "\n" +
+                            "차익: " + Math.abs(bithumbPrice - coinonePrice) + "\n";
+
+                    canNoticeArr[i] = false;
+                }
+
+                System.out.printf("--------------------------------------------------\n");
             }
 
-            if (bithumbBuyPrice - coinoneSellPrice >= MIN_DIFF) {
-                isTiming = true;
-                mustSellBithumb = true;
-                coinonePrice = coinoneSellPrice;
-                bithumbPrice = bithumbBuyPrice;
-            }
-            else if (coinoneBuyPrice - bithumbSellPrice >= MIN_DIFF) {
-                isTiming = true;
-                mustSellBithumb = false;
-                coinonePrice = coinoneBuyPrice;
-                bithumbPrice = bithumbSellPrice;
-            }
-
-            if(isTiming && canNotice) {
-                String mailMsg =
-                    coin.name() + " 거래소 차익 거래 타이밍 입니다.\n" +
-                    (mustSellBithumb ? "빗썸에서 팔고 코인원에서 사세요.\n" : "코인원에서 팔고 빗썸에서 사세요.\n") +
-                    "Bithumb: " + bithumbPrice + "\n" +
-                    "Coinone: " + coinonePrice + "\n" +
-                    "차익: " + Math.abs(bithumbPrice - coinonePrice);
-                if(emailSender != null)
-                    emailSender.setStringAndReady("Arbitrage", mailMsg);
-                canNotice = false;
+            if (emailSender != null && !"".equals(mailMsg)) {
+                emailSender.setStringAndReady("Arbitrage", mailMsg);
                 System.out.println(mailMsg);
             }
-
-            System.out.printf("--------------------------------------------------\n");
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public void makeMoney() throws Exception {
@@ -230,6 +239,13 @@ public class ArbitrageRoutine implements Routine{
         buyTrade.setOppositeTrade(sellTrade);
         sellTrade.start();
         buyTrade.start();
+        try {
+            sellTrade.getThread().join();
+            buyTrade.getThread().join();
+        }
+        catch (Exception e) {
+            System.out.println("join exception");
+        }
     }
 
     public static void main(String[] args) {
