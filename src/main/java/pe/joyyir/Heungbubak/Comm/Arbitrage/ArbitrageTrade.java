@@ -9,21 +9,14 @@ import pe.joyyir.Heungbubak.Util.CmnUtil;
 import java.util.Date;
 
 public class ArbitrageTrade implements Runnable {
-    private enum ThreadStatus {
-        NEW, RUNNING, SUSPENDED, STOPPED;
-    }
-    private enum TradeStatus {
-        START(1), ORDER_MADE(2), ORDER_CANCELED(3), ORDER_COMPLETED(4);
+    // parameters
+    final int TRIAL = 5;
+    final int TRIAL_TIME_INTERVAL = 1000;
 
-        @Getter
-        private int step;
-        TradeStatus (int step) {
-            this.step = step;
-        }
+    public enum TradeStatus {
+        START, ORDER_MADE, ORDER_CANCELED, ORDER_COMPLETED
     }
-    @Getter @Setter
-    private ThreadStatus threadStatus;
-    @Getter @Setter
+    @Getter
     private TradeStatus tradeStatus;
     @Getter @Setter
     private ArbitrageExchange exchange;
@@ -41,201 +34,183 @@ public class ArbitrageTrade implements Runnable {
     String orderId;
     @Getter
     private Thread thread;
+    private Boolean isCancelRequired;
 
-    public boolean isOrderMade() {
-        return tradeStatus.getStep() >= TradeStatus.ORDER_MADE.getStep();
+    public void setTradeStatus(TradeStatus status) {
+        synchronized (this) {
+            tradeStatus = status;
+            this.notify();
+            if(tradeStatus != null) {
+                //log("notify");
+            }
+        }
     }
 
-    public boolean isOrderCompleted() {
-        return tradeStatus.getStep() >= TradeStatus.ORDER_COMPLETED.getStep();
+    public void setIsCancelRequired(boolean cancelRequired, String cause) {
+        cause = (cause != null && !"".equals(cause)) ? cause : "불명";
+        synchronized (isCancelRequired) {
+            if (cancelRequired) {
+                //log("거래 취소가 요청됨 (원인: " + cause + ")");
+            }
+            isCancelRequired = cancelRequired;
+        }
+    }
+
+    public Boolean isCancelRequired() {
+        synchronized (isCancelRequired) {
+            return isCancelRequired;
+        }
     }
 
     private void log(String str) {
-        String indention = orderType == OrderType.SELL ? " " : "\t\t\t";
-        System.out.printf("[%s %s]%s%s\n", CmnUtil.timeToString(new Date()), orderType.name(), indention, str);
+        String indention = orderType == OrderType.SELL ? " " : "\t\t\t\t\t\t\t\t\t\t\t\t\t";
+        System.out.printf("%s%s[%s] %s\n", CmnUtil.timeToString(new Date()), indention, orderType.name(), str);
     }
 
     public ArbitrageTrade(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity) {
-        setThreadStatus(ThreadStatus.NEW);
-        setTradeStatus(TradeStatus.START);
-        this.exchange = exchange;
         this.orderType = orderType;
+        this.tradeStatus = TradeStatus.START;
+        this.exchange = exchange;
         this.coin = coin;
         this.price = price;
         this.quantity = quantity;
         this.oppositeTrade = null;
         this.orderId = null;
         this.thread = new Thread(this);
+        this.isCancelRequired = false;
     }
 
     public void start() {
-        setThreadStatus(ThreadStatus.RUNNING);
         thread.start();
     }
-
-    public void stop() {
-        setThreadStatus(ThreadStatus.STOPPED);
-    }
-
 
     @Override
     public void run() {
         try {
-            makeOrder();
-        }
-        catch (Exception e) {
-            // 에러 처리
-            return;
-        }
-
-        try {
-            waitOrderCompleted();
-        }
-        catch (Exception e) {
-            // 에러 처리
-            return;
-        }
-    }
-
-    public void run2() {
-        try {
-            if(threadStatus == ThreadStatus.STOPPED)
+            if(isCancelRequired()) {
+                log("거래 취소가 요청되어 종료");
                 return;
+            }
             makeOrder();
-            if(isStopRequired()) return;
         }
         catch (Exception e) {
-            log("거래 생성 실패");
-            if(oppositeTrade != null) {
-                synchronized (oppositeTrade.getTradeStatus()) {
-                    switch (oppositeTrade.getTradeStatus()) {
-                        case START:
-                            oppositeTrade.stop();
-                            break;
-                        case ORDER_MADE:
-                            log("상대편 거래가 진행 중이므로 상대편 거래 취소 진행");
-                            try {
-                                oppositeTrade.tryCancelOrder();
-                            }
-                            catch (Exception e3) {
-                                e3.printStackTrace();
-                            }
-                            break;
-                        case ORDER_CANCELED:
-                            break;
-                        case ORDER_COMPLETED:
-                            log("상대편 거래가 완료되었으므로 상대편 거래소에서 역 거래 진행");
-                            // TODO : oppositeTrade에 대한 역 거래 진행
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                /*
-                if(oppositeTrade.isOrderMade()) {
-                    if(oppositeTrade.isOrderCompleted()) {
-                        log("상대편 거래가 완료되었으므로 상대편 거래소에서 역 거래 진행");
-                        // TODO : oppositeTrade에 대한 역 거래 진행
-                    }
-                    else {
-                        try {
-                            log("상대편 거래가 진행 중이므로 상대편 거래 취소 진행");
-                            oppositeTrade.wait();
-                            oppositeTrade.tryCancelOrder();
-                            log("상대편 거래 취소 성공");
-                        }
-                        catch (Exception e2) {
-                            log("상대편 거래 취소 실패! 사용자 확인 필요!!!");
-                            // TODO : 사용자에게 알림
-                        }
-                    }
-                }
-                else {
-                    log("상대편 거래가 만들어지지 않음");
-                }
-                */
-            }
-            else {
-                log("상대편 거래가 설정되지 않음");
-            }
+            log("그럴리 없는데...종료 " + e);
+            oppositeTrade.setIsCancelRequired(true, "상대방의 원인 불명 오류");
             return;
         }
 
         try {
+            if(isCancelRequired()) {
+                log("거래 취소가 요청되어 거래 취소 시도");
+                tryCancelOrder();
+                log("종료");
+                return;
+            }
             waitOrderCompleted();
         }
-        catch (Exception e) { // 제한 시간 내에 거래가 성사되지 않음
+        catch (Exception e) {
+            log(e.getMessage());
             try {
-                log("거래가 제한 시간 내에 성사되지 않아 거래 취소 진행");
                 tryCancelOrder();
             }
             catch (Exception e2) {
-                log("거래 취소 실패! 사용자 확인 필요!!!");
-                // TODO : 사용자에게 알림
+                log(e2.getMessage());
+            }
+            log("종료");
+            return;
+        }
+
+        synchronized (oppositeTrade) {
+            while(oppositeTrade.getTradeStatus() != TradeStatus.ORDER_COMPLETED
+                    && oppositeTrade.getTradeStatus() != TradeStatus.ORDER_CANCELED) {
+                try {
+                    log("상대방 거래가 끝날 때까지 대기");
+                    oppositeTrade.wait();
+                    log("대기 상태 풀림");
+                    if(isCancelRequired()) {
+                        log("거래 취소가 요청되어 역 거래 시도");
+                        try {
+                            if((CmnUtil.msTime() % 2 == 1) ? true : false)
+                                log("역 거래 성공");
+                            else
+                                throw new Exception("역 거래 실패... 알아서 하셈");
+                        }
+                        catch (Exception e2) {
+                            log(e2.getMessage());
+                        }
+                        log("종료");
+                        return;
+                    }
+                }
+                catch (InterruptedException e) { }
             }
         }
+        log("종료");
     }
 
-    private void makeOrder() throws Exception {
+    private void makeOrder() {
         synchronized (tradeStatus) {
-            orderId = exchange.makeOrder(orderType, coin, price, quantity);
-            setTradeStatus(TradeStatus.ORDER_MADE);
-            log("거래 생성 완료");
-            tradeStatus.notify();
+            try {
+                orderId = exchange.makeOrder(orderType, coin, price, quantity);
+                setTradeStatus(TradeStatus.ORDER_MADE);
+                log("거래 생성 완료");
+            }
+            catch (Exception e) {
+                log("거래 생성 실패 " + e);
+                setIsCancelRequired(true, "거래 생성 실패");
+                oppositeTrade.setIsCancelRequired(true, "상대방의 거래 생성 실패");
+            }
         }
     }
 
     private void waitOrderCompleted() throws Exception {
         synchronized (tradeStatus) {
-            for(int trial = 0; trial < 5; trial++) {
+            boolean isSuccess = false;
+            Exception finalException = null;
+            for(int trial = 0; trial < TRIAL; trial++) {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
                         setTradeStatus(TradeStatus.ORDER_COMPLETED);
                         log("거래 성사 완료");
+                        isSuccess = true;
                         break;
                     }
+                    Thread.sleep(TRIAL_TIME_INTERVAL);
                 }
-                catch (Exception e) { }
+                catch (Exception e) {
+                    finalException = e;
+                }
             }
 
-            if(!isOrderCompleted()) {
-                tradeStatus.notify();
-                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다.");
-            }
-
-            tradeStatus.notify();
+            if(!isSuccess)
+                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + finalException);
         }
     }
 
     private void tryCancelOrder() throws Exception {
         synchronized (tradeStatus) {
-            for (int trial = 0; trial < 5; trial++) {
-                try {
-                    exchange.cancelOrder(orderId, orderType, coin, price, quantity);
-                    setTradeStatus(TradeStatus.ORDER_CANCELED);
-                    log("거래 취소 완료");
-                    tradeStatus.notify();
-                    return;
-                } catch (Exception e) { }
+            if (tradeStatus == TradeStatus.ORDER_MADE) {
+                boolean isSuccess = false;
+                Exception finalException = null;
+                for (int trial = 0; trial < TRIAL; trial++) {
+                    try {
+                        exchange.cancelOrder(orderId, orderType, coin, price, quantity);
+                        isSuccess = true;
+                        break;
+                    } catch (Exception e) {
+                        finalException = e;
+                    }
+                    Thread.sleep(TRIAL_TIME_INTERVAL);
+                }
+                if(!isSuccess) {
+                    throw new Exception("취소 실패 " + finalException);
+                }
             }
-            //tradeStatus.notify();
-            throw new Exception("취소 실패");
-        }
-    }
-
-    private boolean isStopRequired() {
-        if(threadStatus == ThreadStatus.NEW || threadStatus == ThreadStatus.RUNNING) {
-            if(tradeStatus == TradeStatus.ORDER_COMPLETED || tradeStatus == TradeStatus.ORDER_CANCELED) {
-                return true;
+            setTradeStatus(TradeStatus.ORDER_CANCELED);
+            log("거래 취소 완료");
+            synchronized (oppositeTrade.isCancelRequired()) {
+                oppositeTrade.setIsCancelRequired(true, "상대방의 거래 취소");
             }
-            else
-                return false;
-        }
-        else if(threadStatus == ThreadStatus.STOPPED) {
-            return true;
-        }
-        else {
-            return false;
         }
     }
 }

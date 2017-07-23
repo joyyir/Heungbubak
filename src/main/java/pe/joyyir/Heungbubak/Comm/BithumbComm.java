@@ -19,12 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BithumbComm implements ArbitrageExchange {
-    private final String API_URL = "https://api.bithumb.com/";
-    private final String TICKER_URL = "public/ticker/";
-
     public static final String STATUS_CODE_SUCCESS = "0000";
     public static final String STATUS_CODE_CUSTOM = "5600";
-
+    private final String API_URL = "https://api.bithumb.com/";
+    private final String TICKER_URL = "public/ticker/";
     @Getter @Setter
     private BithumbApiKey apikey;
     private String key;
@@ -34,6 +32,45 @@ public class BithumbComm implements ArbitrageExchange {
         setApikey(new BithumbApiKey());
         key = getApikey().getKey();
         secret = getApikey().getSecret();
+    }
+
+    public static void main(String[] args) {
+        try {
+            BithumbComm comm = new BithumbComm();
+            CoinoneComm coinComm = new CoinoneComm();
+
+            /*
+            comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
+            */
+
+            /*
+            long bithumbBTCprice = comm.getMarketPrice(BithumbComm.Coin.BTC, PriceType.BUY);
+            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.Coin.BTC);
+            System.out.println("bithumb BTC 시세 : " + bithumbBTCprice);
+            System.out.println("coinone BTC 시세 : " + coinoneBTCprice);
+            System.out.println("차이 : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
+            */
+
+            //comm.makeOrder(OrderType.BUY, Coin.ETC, 19570L, 0.1F);
+            //comm.makeOrder(OrderType.SELL, Coin.ETC, 19450L, 0.0998F);
+
+            //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
+
+            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
+            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
+//            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+
+            //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
+            //System.out.println(comm.isOrderCompleted(result));
+            System.out.println(comm.isOrderCompleted("1500384872078", OrderType.BUY, Coin.ETC));
+
+            //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
+            //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -149,7 +186,8 @@ public class BithumbComm implements ArbitrageExchange {
         errorCheck(result, "Withdrawal KRW");
     }
 
-    public JSONObject getOrderInfo(String orderId, OrderType orderType, Coin coin) throws Exception {
+    @Override
+    public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
         final String ENDPOINT_FINISHED = "info/order_detail";
         final String ENDPOINT_IN_PROGRESS = "info/orders";
         final String[] ENDPOINTS = { ENDPOINT_FINISHED, ENDPOINT_IN_PROGRESS };
@@ -180,7 +218,7 @@ public class BithumbComm implements ArbitrageExchange {
 
     @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
-        JSONObject result = getOrderInfo(orderId, orderType, coin);
+        JSONObject result = getOrderInfo(orderId, coin, orderType);
         return isOrderCompleted(result);
     }
 
@@ -236,44 +274,5 @@ public class BithumbComm implements ArbitrageExchange {
         }
 
         return desc;
-    }
-
-    public static void main(String[] args) {
-        try {
-            BithumbComm comm = new BithumbComm();
-            CoinoneComm coinComm = new CoinoneComm();
-
-            /*
-            comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
-            */
-
-            /*
-            long bithumbBTCprice = comm.getMarketPrice(BithumbComm.Coin.BTC, PriceType.BUY);
-            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.Coin.BTC);
-            System.out.println("bithumb BTC 시세 : " + bithumbBTCprice);
-            System.out.println("coinone BTC 시세 : " + coinoneBTCprice);
-            System.out.println("차이 : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
-            */
-
-            //comm.makeOrder(OrderType.BUY, Coin.ETC, 19570L, 0.1F);
-            //comm.makeOrder(OrderType.SELL, Coin.ETC, 19450L, 0.0998F);
-
-            //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
-
-            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
-            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
-//            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-
-            //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
-            //System.out.println(comm.isOrderCompleted(result));
-            System.out.println(comm.isOrderCompleted("1500384872078", OrderType.BUY, Coin.ETC));
-
-            //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
-            //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class EmailSender {
     private List<String> strList = new ArrayList<>();
+    @Setter
     private String subject = "undefined";
     @Getter @Setter
     private boolean isReady = true;

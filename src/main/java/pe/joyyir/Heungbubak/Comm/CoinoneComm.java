@@ -212,6 +212,11 @@ public class CoinoneComm implements ArbitrageExchange {
         errorCheck(result);
     }
 
+    @Override
+    public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
+        return getOrderInfo(orderId, coin, null);
+    }
+
     public JSONObject getOrderInfo(String orderId, Coin coin) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = API_URL + "v2/order/order_info/";

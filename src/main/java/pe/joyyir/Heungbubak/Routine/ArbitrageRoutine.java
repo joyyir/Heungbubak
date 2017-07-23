@@ -13,7 +13,7 @@ import lombok.Setter;
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 2000;
-    private final int MIN_DIFF_ETC = 100;
+    private final int MIN_DIFF_ETC = 200;//100;
     private final int MIN_DIFF_XRP = 2;
 
     private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP};
@@ -38,9 +38,10 @@ public class ArbitrageRoutine implements Routine{
     @Override
     public void run() {
         String mailMsg = "";
+        String mailSubject = "";
 
-        try {
-            for(int i = 0; i < COIN_ARR.length; i++) {
+        for(int i = 0; i < COIN_ARR.length; i++) {
+            try {
                 final Coin coin = COIN_ARR[i];
                 final int minDiff = DIFF_ARR[i];
 
@@ -77,34 +78,37 @@ public class ArbitrageRoutine implements Routine{
                 }
 
                 if (isTiming && canNoticeArr[i]) {
+                    mailSubject += coin.name() + " ";
                     mailMsg +=
                             coin.name() + " 거래소 차익 거래 타이밍 입니다.\n" +
-                            (mustSellBithumb ? "빗썸에서 팔고 코인원에서 사세요.\n" : "코인원에서 팔고 빗썸에서 사세요.\n") +
-                            "Bithumb: " + bithumbPrice + "\n" +
-                            "Coinone: " + coinonePrice + "\n" +
-                            "차익: " + Math.abs(bithumbPrice - coinonePrice) + "\n";
+                                    (mustSellBithumb ? "빗썸에서 팔고 코인원에서 사세요.\n" : "코인원에서 팔고 빗썸에서 사세요.\n") +
+                                    "Bithumb: " + bithumbPrice + "\n" +
+                                    "Coinone: " + coinonePrice + "\n" +
+                                    "차익: " + Math.abs(bithumbPrice - coinonePrice) + "\n";
 
                     canNoticeArr[i] = false;
                 }
 
                 System.out.printf("--------------------------------------------------\n");
             }
-
-            if (emailSender != null && !"".equals(mailMsg)) {
-                emailSender.setStringAndReady("Arbitrage", mailMsg);
-                System.out.println(mailMsg);
+            catch (Exception e) {
+                System.out.println("코인 시세 받아오던 중 오류 발생");
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
+
+        if (emailSender != null && !"".equals(mailMsg)) {
+            mailSubject += "타이밍";
+            emailSender.setSubject(mailSubject);
+            emailSender.setStringAndReady("Arbitrage", mailMsg);
+            System.out.println(mailMsg);
         }
 
     }
 
-    public void makeMoney() throws Exception {
+    public boolean makeMoney() throws Exception {
         final Coin coin = Coin.ETC;
-        final int MIN_DIFF = 0;
-        final long MIN_PROFIT = 50000;
+        final int MIN_DIFF = MIN_DIFF_ETC;
+        final long MIN_PROFIT = 5000;
 
         final boolean DEBUG = true;
         String DEBUG_SELL_EXCHANGE = "", DEBUG_BUY_EXCHANGE = "";
@@ -161,7 +165,7 @@ public class ArbitrageRoutine implements Routine{
                 System.out.printf("\nstep 2. 거래 타이밍인지 확인\n");
                 System.out.printf("\t거래 타이밍이 아니다.\n");
             }
-            return;
+            return false;
         }
 
         // step 3. 거래 가능한 보유 수량 확인
@@ -178,7 +182,7 @@ public class ArbitrageRoutine implements Routine{
 
         if (expectedProfit < MIN_PROFIT) {
             if (DEBUG) System.out.printf("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
-            return;
+            return false;
         }
 
         /*
@@ -213,13 +217,13 @@ public class ArbitrageRoutine implements Routine{
 
         if (avgDiff < MIN_DIFF || minmaxDiff < MIN_DIFF) {
             System.out.printf("\t=> 차익이 충분히 나지 않으므로 거래를 취소합니다.\n");
-            return;
+            return false;
         } else {
             System.out.printf("\t=> 차익이 충분하므로 거래를 진행합니다.\n");
         }
 
         if (true) {
-            throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
+            //throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
         }
 
         // step 6. 거래 진행
@@ -230,9 +234,29 @@ public class ArbitrageRoutine implements Routine{
         buyTrade.setOppositeTrade(sellTrade);
         sellTrade.start();
         buyTrade.start();
+        try {
+            sellTrade.getThread().join();
+            buyTrade.getThread().join();
+        }
+        catch (Exception e) {
+            System.out.println("join exception");
+        }
+
+        if(sellTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED
+                && buyTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED) {
+            // 거래 성공
+            System.out.println("\t거래 성공!!!\n");
+            System.out.println("\t판매 결과: " + sellExchange.getOrderInfo(sellTrade.getOrderId(), coin, OrderType.SELL).toString() + "\n");
+            System.out.println("\t구매 결과: " + buyExchange.getOrderInfo(buyTrade.getOrderId(), coin, OrderType.BUY).toString() + "\n");
+        }
+        else {
+            // 거래 실패
+            System.out.println("\t거래 실패!!!\n");
+        }
+        return true;
     }
 
-    void testTrade() {
+    private void testTrade() {
         ArbitrageTrade sellTrade = new ArbitrageTrade(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100);
         ArbitrageTrade buyTrade = new ArbitrageTrade(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100);
         sellTrade.setOppositeTrade(buyTrade);
@@ -251,8 +275,12 @@ public class ArbitrageRoutine implements Routine{
     public static void main(String[] args) {
         try {
             ArbitrageRoutine arbitrage = new ArbitrageRoutine(null);
-            //arbitrage.makeMoney();
-            arbitrage.testTrade();
+            while(true) {
+                if(arbitrage.makeMoney())
+                    break;
+                Thread.sleep(10000);
+            }
+            //arbitrage.testTrade();
         }
         catch (Exception e) {
             e.printStackTrace();
