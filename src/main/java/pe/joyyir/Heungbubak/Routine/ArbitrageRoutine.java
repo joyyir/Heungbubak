@@ -276,9 +276,14 @@ public class ArbitrageRoutine implements Routine{
         try {
             ArbitrageRoutine arbitrage = new ArbitrageRoutine(null);
             while(true) {
-                if(arbitrage.makeMoney())
-                    break;
-                Thread.sleep(10000);
+                try {
+                    if (arbitrage.makeMoney())
+                        break;
+                    Thread.sleep(10000);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             //arbitrage.testTrade();
         }

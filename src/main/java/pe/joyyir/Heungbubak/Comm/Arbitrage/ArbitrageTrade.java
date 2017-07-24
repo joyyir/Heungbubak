@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
+import pe.joyyir.Heungbubak.Const.PriceType;
 import pe.joyyir.Heungbubak.Util.CmnUtil;
 
 import java.util.Date;
@@ -211,6 +212,19 @@ public class ArbitrageTrade implements Runnable {
             synchronized (oppositeTrade.isCancelRequired()) {
                 oppositeTrade.setIsCancelRequired(true, "상대방의 거래 취소");
             }
+        }
+    }
+
+    private void tryReverseOrder() {
+        try {
+            OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
+            PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
+            double reducedQuantity = quantity * 0.95; // 수수료 제외
+            ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, reducedQuantity);
+            exchange.makeOrder(orderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
+        }
+        catch (Exception e) {
+
         }
     }
 }
