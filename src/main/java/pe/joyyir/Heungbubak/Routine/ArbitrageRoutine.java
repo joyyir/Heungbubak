@@ -13,7 +13,7 @@ import lombok.Setter;
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 2000;
-    private final int MIN_DIFF_ETC = 200;//100;
+    private final int MIN_DIFF_ETC = 150;//100;
     private final int MIN_DIFF_XRP = 2;
 
     private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP};
@@ -141,6 +141,8 @@ public class ArbitrageRoutine implements Routine{
             buyExchange = coinone;
             buyPrice = coinoneSellPrice;
             if (DEBUG) {
+                DEBUG_SELL_EXCHANGE = "빗썸";
+                DEBUG_BUY_EXCHANGE = "코인원";
                 System.out.printf("\nstep 2. 거래 타이밍인지 확인\n");
                 System.out.printf("\t빗썸에서 팔고 코인원에서 산다.\n");
             }
@@ -275,11 +277,11 @@ public class ArbitrageRoutine implements Routine{
     public static void main(String[] args) {
         try {
             ArbitrageRoutine arbitrage = new ArbitrageRoutine(null);
-            while(true) {
+            if(true) {
                 try {
                     if (arbitrage.makeMoney())
-                        break;
-                    Thread.sleep(10000);
+                        ;//break;
+                    //Thread.sleep(10000);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
