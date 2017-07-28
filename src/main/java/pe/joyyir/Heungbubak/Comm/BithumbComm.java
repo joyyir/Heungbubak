@@ -56,17 +56,19 @@ public class BithumbComm implements ArbitrageExchange {
 
             //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
 
-            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
-            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+            //String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
+            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
             //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
 //            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
 
             //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
             //System.out.println(comm.isOrderCompleted(result));
-            System.out.println(comm.isOrderCompleted("1500384872078", OrderType.BUY, Coin.ETC));
+            //System.out.println(comm.isOrderCompleted("1500384872078", OrderType.BUY, Coin.ETC));
 
             //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
+
+            System.out.println(comm.getBalance(Coin.ETC));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -125,7 +127,8 @@ public class BithumbComm implements ArbitrageExchange {
         double balance;
         String endpoint = "info/balance";
         Map<String, String> params = new HashMap<>();
-        params.put("order_currency", coin.name().toUpperCase());
+        //params.put("order_currency", coin.name().toUpperCase());
+        params.put("currency", coin.name().toUpperCase());
         params.put("payment_currency", "KRW");
         params.put("endpoint", '/' + endpoint);
         JSONObject result = callApi(endpoint, params);
@@ -252,7 +255,7 @@ public class BithumbComm implements ArbitrageExchange {
     }
 
     private void errorCheck(JSONObject result, String funcName) throws Exception {
-        String status = result.getString("tradeStatus");
+        String status = result.getString("status");
         if (!status.equals(STATUS_CODE_SUCCESS)) {
             String customMsg = "";
             if(status.equals(STATUS_CODE_CUSTOM))

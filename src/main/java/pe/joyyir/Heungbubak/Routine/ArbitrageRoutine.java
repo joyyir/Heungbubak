@@ -13,7 +13,7 @@ import lombok.Setter;
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
     private final int MIN_DIFF_ETH = 2000;
-    private final int MIN_DIFF_ETC = 150;//100;
+    private final int MIN_DIFF_ETC = 200;//100;
     private final int MIN_DIFF_XRP = 2;
 
     private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP};
@@ -277,11 +277,12 @@ public class ArbitrageRoutine implements Routine{
     public static void main(String[] args) {
         try {
             ArbitrageRoutine arbitrage = new ArbitrageRoutine(null);
-            if(true) {
+            while(true) {
                 try {
+                    Thread.sleep(5000);
                     if (arbitrage.makeMoney())
-                        ;//break;
-                    //Thread.sleep(10000);
+                        break;
+                    System.out.println("\n------------------------------------------------------------\n");
                 }
                 catch (Exception e) {
                     e.printStackTrace();

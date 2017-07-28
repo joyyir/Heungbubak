@@ -13,7 +13,7 @@ import java.util.Date;
 
 public class ValueChangeRoutine implements Routine {
     private static long TARGET_WON = -1;
-    private static long TARGET_WON_INTERVAL = 200000;
+    private static long TARGET_WON_INTERVAL = 5000;
     private static final String MAIL_SUBJECT = "흥부박 알림";
 
     private CoinoneComm coinone = new CoinoneComm();
@@ -35,7 +35,7 @@ public class ValueChangeRoutine implements Routine {
 
             long coinoneBal = coinone.getCompleteBalance();
             double poloBal = poloniex.getCompleteBalance();
-            double walletBal = poloniex.getMarketPrice(Coin.BTC, Coin.STR) * paperWallet.getDouble(Coin.STR.name());
+            double walletBal = poloniex.getMarketPrice(Coin.BTC, Coin.STR) * paperWallet.getDouble(Coin.STR.name()) + paperWallet.getDouble(Coin.BTC.name());
             double btcPrice = coinone.getLastMarketPrice(Coin.BTC);
             long totalWon = coinoneBal + (long) ((poloBal + walletBal) * btcPrice);
             int increaseRate = (int)((double)totalWon / Config.getInvestment() * 100);
