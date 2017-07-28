@@ -1,8 +1,8 @@
 package pe.joyyir.Heungbubak.Routine;
 
-import pe.joyyir.Heungbubak.Comm.CoinoneComm;
-import pe.joyyir.Heungbubak.Comm.EmailSender;
-import pe.joyyir.Heungbubak.Comm.PoloniexComm;
+import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
+import pe.joyyir.Heungbubak.Util.EmailSender;
+import pe.joyyir.Heungbubak.Exchange.Service.PoloniexService;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Util.Config;
 import lombok.Setter;
@@ -10,8 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class PriceChangeRoutine implements Routine {
-    private CoinoneComm coinone = new CoinoneComm();
-    private PoloniexComm poloniex = new PoloniexComm();
+    private CoinoneService coinone = new CoinoneService();
+    private PoloniexService poloniex = new PoloniexService();
     private JSONArray prevPrice = Config.getPreviousPrice();
     @Setter
     private EmailSender emailSender = null;
@@ -29,7 +29,7 @@ public class PriceChangeRoutine implements Routine {
         if(!Coin.KRW.name().equals(unit))
             return false;
 
-        Coin[] coinArr = CoinoneComm.COIN_ARRAY;
+        Coin[] coinArr = CoinoneService.COIN_ARRAY;
         for(int i = 0; i < coinArr.length; i++) {
             if(coinArr[i].name().equals(coin))
                 return true;

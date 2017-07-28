@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Util;
 
 import pe.joyyir.Heungbubak.Util.Config;
 import com.google.api.client.auth.oauth2.Credential;
@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-public class GmailComm {
+public class GmailService {
     /** Application name. */
     private static final String APPLICATION_NAME =
             "Heungbubak";

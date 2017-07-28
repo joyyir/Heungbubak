@@ -1,9 +1,7 @@
 package pe.joyyir.Heungbubak;
 
-import pe.joyyir.Heungbubak.Comm.EmailSender;
-import pe.joyyir.Heungbubak.Routine.PriceChangeRoutine;
+import pe.joyyir.Heungbubak.Util.EmailSender;
 import pe.joyyir.Heungbubak.Routine.Routine;
-import pe.joyyir.Heungbubak.Routine.ValueChangeRoutine;
 import pe.joyyir.Heungbubak.Routine.ArbitrageRoutine;
 
 import java.util.ArrayList;

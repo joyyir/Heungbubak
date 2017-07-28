@@ -1,8 +1,9 @@
 package pe.joyyir.Heungbubak.Routine;
 
-import pe.joyyir.Heungbubak.Comm.CoinoneComm;
-import pe.joyyir.Heungbubak.Comm.EmailSender;
-import pe.joyyir.Heungbubak.Comm.PoloniexComm;
+import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
+import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
+import pe.joyyir.Heungbubak.Util.EmailSender;
+import pe.joyyir.Heungbubak.Exchange.Service.PoloniexService;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Util.Config;
 import lombok.Setter;
@@ -16,8 +17,9 @@ public class ValueChangeRoutine implements Routine {
     private static long TARGET_WON_INTERVAL = 5000;
     private static final String MAIL_SUBJECT = "흥부박 알림";
 
-    private CoinoneComm coinone = new CoinoneComm();
-    private PoloniexComm poloniex = new PoloniexComm();
+    private CoinoneService coinone = new CoinoneService();
+    private PoloniexService poloniex = new PoloniexService();
+    private BithumbService bithumb = new BithumbService();
     private JSONObject paperWallet = Config.getPaperWallet();
     private boolean isFirst = true;
     @Setter

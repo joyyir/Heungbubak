@@ -1,14 +1,16 @@
 package pe.joyyir.Heungbubak.Routine;
 
-import pe.joyyir.Heungbubak.Comm.*;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageTrade;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.DummyTrade;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageTrade;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.DummyTrade;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
 import lombok.Setter;
+import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
+import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
+import pe.joyyir.Heungbubak.Util.EmailSender;
 
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;
@@ -25,8 +27,8 @@ public class ArbitrageRoutine implements Routine{
     private final String COINONE_BTC_WALLET_ADDRESS = "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59";
     private final String COINONE_BTC_WALLET_TYPE    = "trade";
 
-    private CoinoneComm coinone = new CoinoneComm();
-    private BithumbComm bithumb = new BithumbComm();
+    private CoinoneService coinone = new CoinoneService();
+    private BithumbService bithumb = new BithumbService();
 
     @Setter
     private EmailSender emailSender = null;
@@ -113,8 +115,8 @@ public class ArbitrageRoutine implements Routine{
         final boolean DEBUG = true;
         String DEBUG_SELL_EXCHANGE = "", DEBUG_BUY_EXCHANGE = "";
 
-        ArbitrageExchange bithumb = new BithumbComm();
-        ArbitrageExchange coinone = new CoinoneComm();
+        ArbitrageExchange bithumb = new BithumbService();
+        ArbitrageExchange coinone = new CoinoneService();
         ArbitrageExchange sellExchange = null, buyExchange = null;
 
         boolean isTiming = false;

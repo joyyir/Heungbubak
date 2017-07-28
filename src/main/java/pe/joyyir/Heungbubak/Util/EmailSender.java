@@ -1,12 +1,10 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Util;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class EmailSender {
     private List<String> strList = new ArrayList<>();
@@ -28,7 +26,7 @@ public class EmailSender {
     }
 
     public void sendEmail() throws Exception {
-        GmailComm.sendEmail(subject, getEmailMessage());
+        GmailService.sendEmail(subject, getEmailMessage());
         strList.clear();
     }
 

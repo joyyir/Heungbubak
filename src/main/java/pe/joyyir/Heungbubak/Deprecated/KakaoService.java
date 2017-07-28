@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Deprecated;
 
 import pe.joyyir.Heungbubak.Util.Config;
 import pe.joyyir.Heungbubak.Util.HTTPUtil;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Created by 1003880 on 2017. 5. 3..
  */
-public class KakaoComm {
+public class KakaoService {
     private final String AUTH_URL = "https://kauth.kakao.com";
     private final String API_URL = "https://kapi.kakao.com";
 
@@ -43,7 +43,7 @@ public class KakaoComm {
         return HTTPUtil.getJSONfromPost(AUTH_URL + "/oauth/token", reqProps, HTTPUtil.paramsBuilder(params));
     }
 
-    // TODO : ÅäÅ« °»½Å ·ÎÁ÷ Ãß°¡
+    // TODO : ï¿½ï¿½Å« ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 
     public String getAccessToken() throws Exception {
         JSONObject kakaoJson = IOUtil.readJson(Config.getApikeyPathKakao());
@@ -90,7 +90,7 @@ public class KakaoComm {
 
     public static void main(String[] args) {
         try {
-            new KakaoComm().sendMessage("this is title", "this is desc");
+            new KakaoService().sendMessage("this is title", "this is desc");
         }
         catch(Exception e) {
             e.printStackTrace();

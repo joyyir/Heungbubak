@@ -1,8 +1,8 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Exchange.Service;
 
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
-import pe.joyyir.Heungbubak.Comm.apikey.CoinoneApiKey;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
+import pe.joyyir.Heungbubak.Exchange.ApiKey.CoinoneApiKey;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
 import pe.joyyir.Heungbubak.Const.PriceType;
@@ -17,7 +17,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class CoinoneComm implements ArbitrageExchange {
+public class CoinoneService implements ArbitrageExchange {
     private final String API_URL = "https://api.coinone.co.kr/";
     private final String TICKER_URL = "ticker?currency=";
     private final String BALANCE_URL = "v2/account/balance/";
@@ -30,7 +30,7 @@ public class CoinoneComm implements ArbitrageExchange {
     private String accessToken;
     private String secret;
 
-    public CoinoneComm() throws Exception {
+    public CoinoneService() throws Exception {
         setApikey(new CoinoneApiKey());
         accessToken = getApikey().getAccessToken();
         secret = getApikey().getSecret();
@@ -239,10 +239,10 @@ public class CoinoneComm implements ArbitrageExchange {
 
     public static void main(String[] args) {
         try {
-            CoinoneComm comm = new CoinoneComm();
+            CoinoneService comm = new CoinoneService();
             /*
             int authNumber;
-            comm.twoFactorAuth(CoinoneComm.Coin.BTC);
+            comm.twoFactorAuth(CoinoneService.Coin.BTC);
             System.out.print("Coinone OTP ��ȣ�� �Է��ϼ��� : ");
             Scanner sc = new Scanner(System.in);
             authNumber = sc.nextInt();

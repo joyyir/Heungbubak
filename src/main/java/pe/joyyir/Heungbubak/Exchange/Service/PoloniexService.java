@@ -1,6 +1,6 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Exchange.Service;
 
-import pe.joyyir.Heungbubak.Comm.apikey.PoloniexApiKey;
+import pe.joyyir.Heungbubak.Exchange.ApiKey.PoloniexApiKey;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Util.HTTPUtil;
@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PoloniexComm {
+public class PoloniexService {
     private final String API_URL = "https://poloniex.com/";
     private final String TICKER_URL = "public?command=returnTicker";
     private final String TRADING_URL = "tradingApi";
@@ -22,7 +22,7 @@ public class PoloniexComm {
     private String key;
     private String secret;
 
-    public PoloniexComm() throws Exception {
+    public PoloniexService() throws Exception {
         setApikey(new PoloniexApiKey());
         key = getApikey().getKey();
         secret = getApikey().getSecret();
@@ -49,7 +49,7 @@ public class PoloniexComm {
     }
 
     public double getCompleteBalance() throws Exception {
-        long nonce = CmnUtil.nsTime();
+        long nonce = 1501201600000000000L + CmnUtil.nsTime()/1000;
         Double completeBal = 0.0;
 
         try {
@@ -81,7 +81,7 @@ public class PoloniexComm {
 
     public static void main(String[] args){
         try {
-            PoloniexComm comm = new PoloniexComm();
+            PoloniexService comm = new PoloniexService();
             System.out.println("현재 USDT_BTC 시세: " + comm.getMarketPrice(Coin.USDT, Coin.BTC));
             System.out.println("내가 소유한 XRP: " + comm.getBalance(Coin.XRP));
             System.out.println("총 보유 가치 (BTC): " + comm.getCompleteBalance());

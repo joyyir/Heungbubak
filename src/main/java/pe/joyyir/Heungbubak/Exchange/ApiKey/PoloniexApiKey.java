@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm.apikey;
+package pe.joyyir.Heungbubak.Exchange.ApiKey;
 
 import pe.joyyir.Heungbubak.Util.Config;
 import pe.joyyir.Heungbubak.Util.IOUtil;

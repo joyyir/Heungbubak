@@ -1,9 +1,9 @@
-package pe.joyyir.Heungbubak.Comm;
+package pe.joyyir.Heungbubak.Exchange.Service;
 
 import org.json.JSONArray;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageExchange;
-import pe.joyyir.Heungbubak.Comm.Arbitrage.ArbitrageMarketPrice;
-import pe.joyyir.Heungbubak.Comm.apikey.BithumbApiKey;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
+import pe.joyyir.Heungbubak.Exchange.ApiKey.BithumbApiKey;
 import pe.joyyir.Heungbubak.Const.BankCode;
 import pe.joyyir.Heungbubak.Const.Coin;
 import pe.joyyir.Heungbubak.Const.OrderType;
@@ -18,17 +18,20 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BithumbComm implements ArbitrageExchange {
+public class BithumbService implements ArbitrageExchange {
     public static final String STATUS_CODE_SUCCESS = "0000";
     public static final String STATUS_CODE_CUSTOM = "5600";
     private final String API_URL = "https://api.bithumb.com/";
     private final String TICKER_URL = "public/ticker/";
+
+    public static final Coin[] COIN_ARRAY = { Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP, Coin.LTC, Coin.DASH };
+
     @Getter @Setter
     private BithumbApiKey apikey;
     private String key;
     private String secret;
 
-    public BithumbComm() throws Exception {
+    public BithumbService() throws Exception {
         setApikey(new BithumbApiKey());
         key = getApikey().getKey();
         secret = getApikey().getSecret();
@@ -36,16 +39,16 @@ public class BithumbComm implements ArbitrageExchange {
 
     public static void main(String[] args) {
         try {
-            BithumbComm comm = new BithumbComm();
-            CoinoneComm coinComm = new CoinoneComm();
+            BithumbService comm = new BithumbService();
+            CoinoneService coinComm = new CoinoneService();
 
             /*
             comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
             */
 
             /*
-            long bithumbBTCprice = comm.getMarketPrice(BithumbComm.Coin.BTC, PriceType.BUY);
-            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneComm.Coin.BTC);
+            long bithumbBTCprice = comm.getMarketPrice(BithumbService.Coin.BTC, PriceType.BUY);
+            long coinoneBTCprice = coinComm.getMarketPrice(CoinoneService.Coin.BTC);
             System.out.println("bithumb BTC 시세 : " + bithumbBTCprice);
             System.out.println("coinone BTC 시세 : " + coinoneBTCprice);
             System.out.println("차이 : " + Math.abs(bithumbBTCprice-coinoneBTCprice));
@@ -119,19 +122,19 @@ public class BithumbComm implements ArbitrageExchange {
                 break;
         }
 
+
         return Long.valueOf(jsonObject.getJSONObject("data").getString(key));
+    }
+
+    public long getCompleteBalance() throws Exception {
+        JSONObject balance = getBalanceJsonObject();
+        return 0;
     }
 
     @Override
     public double getBalance(Coin coin) throws Exception {
         double balance;
-        String endpoint = "info/balance";
-        Map<String, String> params = new HashMap<>();
-        //params.put("order_currency", coin.name().toUpperCase());
-        params.put("currency", coin.name().toUpperCase());
-        params.put("payment_currency", "KRW");
-        params.put("endpoint", '/' + endpoint);
-        JSONObject result = callApi(endpoint, params);
+        JSONObject result = getBalanceJsonObject();
 
         try {
             balance = result.getJSONObject("data").getDouble("total_" + coin.name().toLowerCase());
@@ -141,6 +144,16 @@ public class BithumbComm implements ArbitrageExchange {
             balance = 0.0;
         }
         return balance;
+    }
+
+    private JSONObject getBalanceJsonObject() throws Exception {
+        String endpoint = "info/balance";
+        Map<String, String> params = new HashMap<>();
+        //params.put("order_currency", coin.name().toUpperCase());
+        params.put("currency", "ALL");
+        params.put("payment_currency", "KRW");
+        params.put("endpoint", '/' + endpoint);
+        return callApi(endpoint, params);
     }
 
     public void sendCoin(Coin coin, float units, String address, Integer destination) throws Exception {

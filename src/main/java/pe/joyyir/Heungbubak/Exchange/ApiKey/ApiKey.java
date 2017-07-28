@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm.apikey;
+package pe.joyyir.Heungbubak.Exchange.ApiKey;
 
 public interface ApiKey {
     void readApiKey(String path) throws Exception;

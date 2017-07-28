@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm.Arbitrage;
+package pe.joyyir.Heungbubak.Exchange.Arbitrage;
 
 import org.json.JSONObject;
 import pe.joyyir.Heungbubak.Const.Coin;

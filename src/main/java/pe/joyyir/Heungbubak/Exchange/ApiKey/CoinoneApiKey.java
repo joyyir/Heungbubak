@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Comm.apikey;
+package pe.joyyir.Heungbubak.Exchange.ApiKey;
 
 import pe.joyyir.Heungbubak.Util.Config;
 import pe.joyyir.Heungbubak.Util.IOUtil;
@@ -6,13 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
-public class BithumbApiKey implements ApiKey {
-    private static final String APIKEY_PATH = Config.getApikeyPathBithumb();
+public class CoinoneApiKey implements ApiKey {
+    private static final String APIKEY_PATH = Config.getApikeyPathCoinone();
 
     @Getter @Setter
     private JSONObject apikey;
 
-    public BithumbApiKey() throws Exception {
+    public CoinoneApiKey() throws Exception {
         readApiKey(APIKEY_PATH);
     }
 
@@ -26,16 +26,18 @@ public class BithumbApiKey implements ApiKey {
         IOUtil.writeJson(path, getApikey());
     }
 
-    public String getKey() { return (String) getApikey().get("connect"); }
-
     @Deprecated
     public long getNonce() {
-        return (long) getApikey().get("nonce");
+        return getApikey().getLong("nonce");
     }
 
     @Deprecated
     public void setNonce(long nonce) {
         getApikey().put("nonce", nonce);
+    }
+
+    public String getAccessToken() {
+        return (String) getApikey().get("access_token");
     }
 
     public String getSecret() {
