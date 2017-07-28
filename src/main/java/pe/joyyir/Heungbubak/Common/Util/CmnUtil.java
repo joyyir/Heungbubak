@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Util;
+package pe.joyyir.Heungbubak.Common.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

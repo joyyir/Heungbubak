@@ -1,6 +1,5 @@
-package pe.joyyir.Heungbubak.Util;
+package pe.joyyir.Heungbubak.Common.Util;
 
-import pe.joyyir.Heungbubak.Util.Config;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;

@@ -1,8 +1,8 @@
 package pe.joyyir.Heungbubak.Deprecated;
 
-import pe.joyyir.Heungbubak.Util.Config;
-import pe.joyyir.Heungbubak.Util.HTTPUtil;
-import pe.joyyir.Heungbubak.Util.IOUtil;
+import pe.joyyir.Heungbubak.Common.Util.Config;
+import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 import org.json.JSONObject;
 
 import java.util.HashMap;

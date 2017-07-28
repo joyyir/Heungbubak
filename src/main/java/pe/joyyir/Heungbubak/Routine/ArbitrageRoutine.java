@@ -4,13 +4,13 @@ import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageTrade;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.DummyTrade;
-import pe.joyyir.Heungbubak.Const.Coin;
-import pe.joyyir.Heungbubak.Const.OrderType;
-import pe.joyyir.Heungbubak.Const.PriceType;
+import pe.joyyir.Heungbubak.Common.Const.Coin;
+import pe.joyyir.Heungbubak.Common.Const.OrderType;
+import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import lombok.Setter;
 import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
 import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
-import pe.joyyir.Heungbubak.Util.EmailSender;
+import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 
 public class ArbitrageRoutine implements Routine{
     private final int MIN_DIFF_BTC = 20000;

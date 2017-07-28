@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Util;
+package pe.joyyir.Heungbubak.Common.Util;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;

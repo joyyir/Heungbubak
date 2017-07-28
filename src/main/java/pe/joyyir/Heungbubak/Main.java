@@ -1,6 +1,6 @@
 package pe.joyyir.Heungbubak;
 
-import pe.joyyir.Heungbubak.Util.EmailSender;
+import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 import pe.joyyir.Heungbubak.Routine.Routine;
 import pe.joyyir.Heungbubak.Routine.ArbitrageRoutine;
 

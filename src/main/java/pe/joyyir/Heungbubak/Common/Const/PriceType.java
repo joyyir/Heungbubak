@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Const;
+package pe.joyyir.Heungbubak.Common.Const;
 
 public enum PriceType {
     BUY("bid"), // 사람들이 사려고 올린 가격 (= 내가 파는 가격)

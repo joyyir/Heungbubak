@@ -1,9 +1,9 @@
 package pe.joyyir.Heungbubak.Exchange.Arbitrage;
 
 import org.json.JSONObject;
-import pe.joyyir.Heungbubak.Const.Coin;
-import pe.joyyir.Heungbubak.Const.OrderType;
-import pe.joyyir.Heungbubak.Const.PriceType;
+import pe.joyyir.Heungbubak.Common.Const.Coin;
+import pe.joyyir.Heungbubak.Common.Const.OrderType;
+import pe.joyyir.Heungbubak.Common.Const.PriceType;
 
 import java.util.Random;
 

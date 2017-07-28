@@ -1,7 +1,7 @@
 package pe.joyyir.Heungbubak.Exchange.ApiKey;
 
-import pe.joyyir.Heungbubak.Util.Config;
-import pe.joyyir.Heungbubak.Util.IOUtil;
+import pe.joyyir.Heungbubak.Common.Util.Config;
+import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;

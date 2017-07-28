@@ -1,4 +1,4 @@
-package pe.joyyir.Heungbubak.Const;
+package pe.joyyir.Heungbubak.Common.Const;
 
 public enum OrderType {
     BUY("bid"), SELL("ask");
