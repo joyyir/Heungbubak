@@ -1,5 +1,6 @@
 package pe.joyyir.Heungbubak.Exchange.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
@@ -14,6 +15,7 @@ import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
+import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +73,8 @@ public class BithumbService implements ArbitrageExchange {
             //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
 
-            System.out.println(comm.getBalance(Coin.ETC));
+            //System.out.println(comm.getBalance(Coin.ETC));
+            System.out.println(comm.getMarketPrice(Coin.ETC, PriceType.BUY));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -133,17 +136,8 @@ public class BithumbService implements ArbitrageExchange {
 
     @Override
     public double getBalance(Coin coin) throws Exception {
-        double balance;
-        JSONObject result = getBalanceJsonObject();
-
-        try {
-            balance = result.getJSONObject("data").getDouble("total_" + coin.name().toLowerCase());
-        }
-        catch (Exception e) {
-            //throw new Exception(coin.name() + "이 존재하지 않습니다.\n" + CmnUtil.getStackTraceString(e));
-            balance = 0.0;
-        }
-        return balance;
+        BalanceVO vo = getBalanceVO();
+        return vo.getTotal(coin);
     }
 
     private JSONObject getBalanceJsonObject() throws Exception {
@@ -154,6 +148,12 @@ public class BithumbService implements ArbitrageExchange {
         params.put("payment_currency", "KRW");
         params.put("endpoint", '/' + endpoint);
         return callApi(endpoint, params);
+    }
+
+    public BalanceVO getBalanceVO() throws Exception {
+        JSONObject result = getBalanceJsonObject();
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(result.getJSONObject("data").toString(), BalanceVO.class);
     }
 
     public void sendCoin(Coin coin, float units, String address, Integer destination) throws Exception {
