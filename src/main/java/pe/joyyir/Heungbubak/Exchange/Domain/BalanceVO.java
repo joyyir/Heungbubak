@@ -3,7 +3,6 @@ package pe.joyyir.Heungbubak.Exchange.Domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import lombok.Getter;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
 
@@ -21,6 +20,10 @@ public class BalanceVO {
     private double totalSTR;
     @Getter
     private long totalKRW;
+    @Getter
+    private long totalLTC;
+    @Getter
+    private long totalDASH;
 
     @JsonSetter("total_btc")
     public void setTotalBTC(double totalBTC) {
@@ -66,6 +69,10 @@ public class BalanceVO {
                 return getTotalSTR();
             case KRW:
                 return getTotalKRW();
+            case LTC:
+                return getTotalLTC();
+            case DASH:
+                return getTotalDASH();
             default:
                 throw new Exception("undefined coin");
         }

@@ -37,20 +37,23 @@ public class ValueChangeRoutine implements Routine {
 
             long coinoneBal = coinone.getCompleteBalance();
             double poloBal = poloniex.getCompleteBalance();
+            long bithumbBal = bithumb.getCompleteBalance();
             double walletBal = poloniex.getMarketPrice(Coin.BTC, Coin.STR) * paperWallet.getDouble(Coin.STR.name()) + paperWallet.getDouble(Coin.BTC.name());
             double btcPrice = coinone.getLastMarketPrice(Coin.BTC);
-            long totalWon = coinoneBal + (long) ((poloBal + walletBal) * btcPrice);
+            long totalWon = coinoneBal + bithumbBal + (long) ((poloBal + walletBal) * btcPrice);
             int increaseRate = (int)((double)totalWon / Config.getInvestment() * 100);
 
             String strTime = dateFormat.format(date);
             //String strLog = "The program is running";
             String strLog = "coinone: " + coinoneBal
                     + " KRW, poloniex: " + poloBal
-                    + " BTC, wallet: " + walletBal
+                    + " BTC, bithumb: " + bithumbBal
+                    + " KRW, wallet: " + walletBal
                     + " BTC, total: " + totalWon + " KRW (" + increaseRate + "%)";
             String strLogMail = "< 현재 보유 가치 >\n"
                     + "coinone: " + coinoneBal + " KRW\n"
                     + "poloniex: " + poloBal + " BTC\n"
+                    + "bithumb: " + bithumbBal + " KRW\n"
                     + "wallet: " + walletBal + " BTC\n"
                     + "------------------------------\n"
                     + "total: " + totalWon + " KRW (" + increaseRate + "%)";
@@ -63,7 +66,7 @@ public class ValueChangeRoutine implements Routine {
             }
             if (totalWon >= TARGET_WON) {
                 //kakao.sendMessage(strTime, strLog);
-                emailSender.setStringAndReady("ValueChange", strLog);
+                emailSender.setStringAndReady("ValueChange", strLogMail);
                 TARGET_WON += TARGET_WON_INTERVAL;
             }
         } catch (Exception e) {

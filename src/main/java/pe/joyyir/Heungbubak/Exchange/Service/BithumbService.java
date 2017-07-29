@@ -1,6 +1,5 @@
 package pe.joyyir.Heungbubak.Exchange.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
@@ -9,13 +8,14 @@ import pe.joyyir.Heungbubak.Common.Const.BankCode;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
-import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
-import pe.joyyir.Heungbubak.Common.Util.Encryptor;
 import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
+import pe.joyyir.Heungbubak.Exchange.DAO.BithumbDAO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO;
+import pe.joyyir.Heungbubak.Exchange.Domain.BasicPriceVO;
+import pe.joyyir.Heungbubak.Exchange.Domain.CoinPriceVO;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -130,30 +130,26 @@ public class BithumbService implements ArbitrageExchange {
     }
 
     public long getCompleteBalance() throws Exception {
-        JSONObject balance = getBalanceJsonObject();
-        return 0;
+        BithumbDAO dao = new BithumbDAO();
+        BalanceVO balanceVO = dao.getBalanceVO();
+        CoinPriceVO priceVO = dao.getCoinPriceVO();
+        double sum = 0.0;
+
+        for(Coin coin : COIN_ARRAY) {
+            double balance = balanceVO.getTotal(coin);
+            BasicPriceVO vo = priceVO.getPrice().get(coin);
+            if(vo == null) continue;
+            double price = vo.getBuyPrice();
+            sum += balance * price;
+        }
+        return (long) (sum + balanceVO.getTotalKRW());
     }
 
     @Override
     public double getBalance(Coin coin) throws Exception {
-        BalanceVO vo = getBalanceVO();
+        BithumbDAO dao = new BithumbDAO();
+        BalanceVO vo = dao.getBalanceVO();
         return vo.getTotal(coin);
-    }
-
-    private JSONObject getBalanceJsonObject() throws Exception {
-        String endpoint = "info/balance";
-        Map<String, String> params = new HashMap<>();
-        //params.put("order_currency", coin.name().toUpperCase());
-        params.put("currency", "ALL");
-        params.put("payment_currency", "KRW");
-        params.put("endpoint", '/' + endpoint);
-        return callApi(endpoint, params);
-    }
-
-    public BalanceVO getBalanceVO() throws Exception {
-        JSONObject result = getBalanceJsonObject();
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(result.getJSONObject("data").toString(), BalanceVO.class);
     }
 
     public void sendCoin(Coin coin, float units, String address, Integer destination) throws Exception {
@@ -165,7 +161,8 @@ public class BithumbService implements ArbitrageExchange {
             params.put("destination", destination.toString());
         params.put("currency", coin.name().toUpperCase());
 
-        JSONObject result = callApi(endpoint, params);
+        BithumbDAO dao = new BithumbDAO();
+        JSONObject result = dao.callApi(endpoint, params);
 
         errorCheck(result, "Sending coin");
     }
@@ -180,7 +177,8 @@ public class BithumbService implements ArbitrageExchange {
         params.put("price", String.valueOf(price));
         params.put("type", orderType.toString());
 
-        JSONObject result = callApi(endpoint, params);
+        BithumbDAO dao = new BithumbDAO();
+        JSONObject result = dao.callApi(endpoint, params);
 
         //System.out.println(result.toString());
         errorCheck(result, "Making order");
@@ -196,7 +194,8 @@ public class BithumbService implements ArbitrageExchange {
         params.put("account", account);
         params.put("price", String.valueOf(quantitiy));
 
-        JSONObject result = callApi(endpoint, params);
+        BithumbDAO dao = new BithumbDAO();
+        JSONObject result = dao.callApi(endpoint, params);
 
         //System.out.println(result.toString());
         errorCheck(result, "Withdrawal KRW");
@@ -216,7 +215,8 @@ public class BithumbService implements ArbitrageExchange {
                 params.put("type", orderType.toString());
                 params.put("currency", coin.name().toUpperCase());
 
-                result = callApi(endpoint, params);
+                BithumbDAO dao = new BithumbDAO();
+                result = dao.callApi(endpoint, params);
                 errorCheck(result, "getOrderInfo");
                 break;
             }
@@ -246,25 +246,9 @@ public class BithumbService implements ArbitrageExchange {
         params.put("order_id", orderId);
         params.put("currency", coin.name().toUpperCase());
 
-        JSONObject result = callApi(endpoint, params);
+        BithumbDAO dao = new BithumbDAO();
+        JSONObject result = dao.callApi(endpoint, params);
         errorCheck(result, "Cancel order");
-    }
-
-    private JSONObject callApi(String endpoint, Map<String, String> params) throws Exception {
-        long nonce = CmnUtil.msTime();
-
-        String strParams = HTTPUtil.paramsBuilder(params);
-        String encodedParams = HTTPUtil.encodeURIComponent(strParams);
-
-        String str = "/" + endpoint + ";" + encodedParams + ";" + nonce;
-
-        Map<String, String> map = new HashMap<>();
-        map.put("Api-Key", key);
-        map.put("Api-Sign", Encryptor.getHmacSha512(secret, str, Encryptor.EncodeType.BASE64));
-        map.put("Api-Nonce", String.valueOf(nonce));
-        map.put("api-client-type", "2");
-
-        return HTTPUtil.getJSONfromPost(API_URL + endpoint, map, strParams);
     }
 
     private void errorCheck(JSONObject result, String funcName) throws Exception {

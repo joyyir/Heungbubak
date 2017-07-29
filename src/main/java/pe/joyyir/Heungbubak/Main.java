@@ -4,6 +4,7 @@ import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 import pe.joyyir.Heungbubak.Routine.ArbitrageTradeRoutine;
 import pe.joyyir.Heungbubak.Routine.Routine;
 import pe.joyyir.Heungbubak.Routine.ArbitrageNoticeRoutine;
+import pe.joyyir.Heungbubak.Routine.ValueChangeRoutine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,10 @@ public class Main {
             EmailSender sender = new EmailSender(subject);
             sender.setReady(false);
 
-            //routineList.add(new ValueChangeRoutine(sender));
+            routineList.add(new ValueChangeRoutine(sender));
             //routineList.add(new PriceChangeRoutine(sender));
             //routineList.add(new ArbitrageNoticeRoutine(sender));
-            routineList.add(new ArbitrageTradeRoutine(sender));
+            //routineList.add(new ArbitrageTradeRoutine(sender));
 
             while (true) {
                 Thread.sleep(timeInterval);
