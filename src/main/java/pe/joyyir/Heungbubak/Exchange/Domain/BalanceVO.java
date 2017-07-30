@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
 
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BalanceVO {
     @Getter
@@ -79,7 +80,7 @@ public class BalanceVO {
     }
 
     public static void main(String[] args) {
-        new BalanceVO().test();
+        //new BalanceVO().test();
     }
 
     public void test() {

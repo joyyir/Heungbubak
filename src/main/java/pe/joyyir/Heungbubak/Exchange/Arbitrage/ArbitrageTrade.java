@@ -219,7 +219,7 @@ public class ArbitrageTrade implements Runnable {
         try {
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
             PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
-            double reducedQuantity = quantity * 0.95; // 수수료 제외
+            double reducedQuantity = quantity * 0.9985; // 수수료 제외
             ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, reducedQuantity);
             exchange.makeOrder(orderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
         }

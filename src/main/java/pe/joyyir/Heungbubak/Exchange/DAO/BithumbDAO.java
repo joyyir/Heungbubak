@@ -10,6 +10,7 @@ import pe.joyyir.Heungbubak.Common.Util.Encryptor;
 import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
 import pe.joyyir.Heungbubak.Exchange.ApiKey.BithumbApiKey;
 import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO;
+import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO_V2;
 import pe.joyyir.Heungbubak.Exchange.Domain.BasicPriceVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.CoinPriceVO;
 
@@ -50,6 +51,7 @@ public class BithumbDAO {
         return HTTPUtil.getJSONfromPost(API_URL + endpoint, map, strParams);
     }
 
+    @Deprecated
     public BalanceVO getBalanceVO() throws Exception {
         String endpoint = "info/balance";
         Map<String, String> params = new HashMap<>();
@@ -61,6 +63,42 @@ public class BithumbDAO {
 
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(result.getJSONObject("data").toString(), BalanceVO.class);
+    }
+
+    public BalanceVO_V2 getBalanceVO_V2() throws Exception {
+        final String endpoint = "info/balance";
+        final String TOTAL_PREFIX = "total_";
+        final String AVAIL_PREFIX = "available_";
+        Map<String, String> params = new HashMap<>();
+        //params.put("order_currency", coin.name().toUpperCase());
+        params.put("currency", "ALL");
+        params.put("payment_currency", "KRW");
+        params.put("endpoint", '/' + endpoint);
+        JSONObject result = callApi(endpoint, params);
+
+        BalanceVO_V2 vo = new BalanceVO_V2();
+        JSONObject data = result.getJSONObject("data");
+        Iterator<?> iterator = data.keys();
+        while(iterator.hasNext()) {
+            String key = (String) iterator.next();
+            if(key.startsWith(AVAIL_PREFIX)) {
+                int startIdx = AVAIL_PREFIX.length();
+                int endIdx = key.length();
+                String strCoin = key.substring(startIdx, endIdx).toUpperCase();
+                Coin coin = Coin.valueOf(strCoin);
+                double balance = data.getDouble(key);
+                vo.getTotal().put(coin, balance);
+            }
+            else if(key.startsWith(TOTAL_PREFIX)) {
+                int startIdx = TOTAL_PREFIX.length();
+                int endIdx = key.length();
+                String strCoin = key.substring(startIdx, endIdx).toUpperCase();
+                Coin coin = Coin.valueOf(strCoin);
+                double balance = data.getDouble(key);
+                vo.getAvailable().put(coin, balance);
+            }
+        }
+        return vo;
     }
 
     public CoinPriceVO getCoinPriceVO() throws Exception {
@@ -84,5 +122,15 @@ public class BithumbDAO {
         }
 
         return vo;
+    }
+
+    public static void main(String[] args) {
+        try {
+            BithumbDAO dao = new BithumbDAO();
+            dao.getBalanceVO_V2();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

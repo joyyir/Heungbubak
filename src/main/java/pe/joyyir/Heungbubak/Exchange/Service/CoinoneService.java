@@ -78,6 +78,10 @@ public class CoinoneService implements ArbitrageExchange {
 
     @Override
     public double getBalance(Coin coin) throws Exception {
+        if(coin == Coin.XRP) {
+            return 3000.0;
+        }
+
         long nonce = CmnUtil.nsTime();
         String url = API_URL + BALANCE_URL;
 
@@ -108,6 +112,7 @@ public class CoinoneService implements ArbitrageExchange {
         return (long) (getLastMarketPrice(Coin.BTC) * getBalance(Coin.BTC))
                 + (long) (getLastMarketPrice(Coin.ETH) * getBalance(Coin.ETH))
                 + (long) (getLastMarketPrice(Coin.ETC) * getBalance(Coin.ETC))
+                + (long) (getLastMarketPrice(Coin.XRP) * getBalance(Coin.XRP))
                 + (long) getBalance(Coin.KRW);
     }
 
@@ -264,6 +269,8 @@ public class CoinoneService implements ArbitrageExchange {
             System.out.println("10�� �ȶ�: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10.0));
             System.out.println("10000�� �ȶ�: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10000.0));
             */
+            comm.getCompleteBalance();
+            //comm.getBalance(Coin.XRP);
         }
         catch(Exception e) {
             e.printStackTrace();
