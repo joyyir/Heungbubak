@@ -156,6 +156,9 @@ public class CoinoneService implements ArbitrageExchange {
             case "777":
                 desc = "Mobile auth error";
                 break;
+            case "101":
+                desc = "Invalid format";
+                break;
             case "103":
                 desc = "Lack of Balance";
                 break;
@@ -195,7 +198,7 @@ public class CoinoneService implements ArbitrageExchange {
     @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, coin);
-        String status = result.getString("tradeStatus"); // live, filled, partially_filled
+        String status = result.getString("status"); // live, filled, partially_filled
         return status.equals("filled");
     }
 
@@ -253,11 +256,10 @@ public class CoinoneService implements ArbitrageExchange {
             authNumber = sc.nextInt();
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
             */
-            /*
-            String orderId = comm.makeOrder(OrderType.SELL, Coin.ETC, 1000000, 0.05);
-            System.out.println(comm.isOrderComplete(orderId, Coin.ETC));
-            comm.cancelOrder(orderId, 1000000, 0.05, true, Coin.ETC);
-            */
+
+            String orderId = comm.makeOrder(OrderType.SELL, Coin.XRP, 1000000, 0.05);
+            System.out.println(comm.isOrderCompleted(orderId, OrderType.SELL, Coin.XRP));
+            comm.cancelOrder(orderId, OrderType.SELL, Coin.XRP, 1000000, 0.05);
 
             //comm.getMarketPrice(Coin.BTC, PriceType.BUY);
 

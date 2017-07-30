@@ -63,7 +63,7 @@ public class BithumbService implements ArbitrageExchange {
 
             //String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
             //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            //comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC);
+            comm.cancelOrder("123", OrderType.BUY, Coin.ETC, 1000, 0.1);
 //            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
 
             //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
@@ -73,7 +73,7 @@ public class BithumbService implements ArbitrageExchange {
             //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
 
-            System.out.println(comm.getBalance(Coin.ETC));
+            //System.out.println(comm.getBalance(Coin.ETC));
             //System.out.println(comm.getMarketPrice(Coin.ETC, PriceType.BUY));
         }
         catch (Exception e) {
@@ -263,8 +263,8 @@ public class BithumbService implements ArbitrageExchange {
         if (!status.equals(STATUS_CODE_SUCCESS)) {
             String customMsg = "";
             if(status.equals(STATUS_CODE_CUSTOM))
-                customMsg = result.getString("message");
-            throw new Exception(funcName + " failed! (tradeStatus:" + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
+                customMsg = result.getJSONObject("message").getString("message");
+            throw new Exception(funcName + " failed! (tradeStatus: " + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
         }
     }
 

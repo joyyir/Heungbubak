@@ -18,14 +18,10 @@ public class ArbitrageTradeRoutine implements Routine{
     private final int MIN_DIFF_ETC = 100;//100;
     private final int MIN_DIFF_XRP = 1;
 
-    private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH, Coin.XRP};
+    private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH}; // XRP 제외 (코인원에서 미지원)
     private final int[] DIFF_ARR = {MIN_DIFF_BTC, MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
     private boolean[] canNoticeArr = {true, true, true, true};
     private int[] noticeCountArr = {0, 0, 0, 0};
-
-    private final String BITHUMB_BTC_WALLET_ADDRESS = "1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM";
-    private final String COINONE_BTC_WALLET_ADDRESS = "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59";
-    private final String COINONE_BTC_WALLET_TYPE    = "trade";
 
     private CoinoneService coinone = new CoinoneService();
     private BithumbService bithumb = new BithumbService();
