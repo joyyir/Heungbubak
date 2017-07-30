@@ -87,7 +87,7 @@ public class BithumbDAO {
                 String strCoin = key.substring(startIdx, endIdx).toUpperCase();
                 Coin coin = Coin.valueOf(strCoin);
                 double balance = data.getDouble(key);
-                vo.getTotal().put(coin, balance);
+                vo.getAvailable().put(coin, balance);
             }
             else if(key.startsWith(TOTAL_PREFIX)) {
                 int startIdx = TOTAL_PREFIX.length();
@@ -95,7 +95,7 @@ public class BithumbDAO {
                 String strCoin = key.substring(startIdx, endIdx).toUpperCase();
                 Coin coin = Coin.valueOf(strCoin);
                 double balance = data.getDouble(key);
-                vo.getAvailable().put(coin, balance);
+                vo.getTotal().put(coin, balance);
             }
         }
         return vo;

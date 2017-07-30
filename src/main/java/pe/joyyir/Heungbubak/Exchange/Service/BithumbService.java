@@ -73,8 +73,8 @@ public class BithumbService implements ArbitrageExchange {
             //comm.getOrderInfo("1500381006079", OrderType.BUY, Coin.ETC, false);
             //System.out.println(comm.isOrderCompleted("1499599864512", OrderType.SELL, Coin.ETC));
 
-            //System.out.println(comm.getBalance(Coin.ETC));
-            System.out.println(comm.getMarketPrice(Coin.ETC, PriceType.BUY));
+            System.out.println(comm.getBalance(Coin.ETC));
+            //System.out.println(comm.getMarketPrice(Coin.ETC, PriceType.BUY));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -125,8 +125,15 @@ public class BithumbService implements ArbitrageExchange {
                 break;
         }
 
+        long price;
+        try {
+            price = Long.valueOf(jsonObject.getJSONObject("data").getString(key));
+        }
+        catch (NumberFormatException e) {
+            price = (long)((double)Double.valueOf(jsonObject.getJSONObject("data").getDouble(key)));
+        }
 
-        return Long.valueOf(jsonObject.getJSONObject("data").getString(key));
+        return price;
     }
 
     public long getCompleteBalance() throws Exception {
@@ -136,20 +143,20 @@ public class BithumbService implements ArbitrageExchange {
         double sum = 0.0;
 
         for(Coin coin : COIN_ARRAY) {
-            double balance = balanceVO.getTotal().get(coin);
+            double balance = balanceVO.getAvailable().get(coin);
             BasicPriceVO vo = priceVO.getPrice().get(coin);
             if(vo == null) continue;
             double price = vo.getBuyPrice();
             sum += balance * price;
         }
-        return (long) (sum + balanceVO.getTotal().get(Coin.KRW));
+        return (long) (sum + balanceVO.getAvailable().get(Coin.KRW));
     }
 
     @Override
     public double getBalance(Coin coin) throws Exception {
         BithumbDAO dao = new BithumbDAO();
         BalanceVO_V2 vo = dao.getBalanceVO_V2();
-        return vo.getTotal().get(coin);
+        return vo.getAvailable().get(coin);
     }
 
     public void sendCoin(Coin coin, float units, String address, Integer destination) throws Exception {

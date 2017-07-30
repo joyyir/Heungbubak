@@ -6,6 +6,7 @@ import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
+import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 
 import java.util.Date;
 
@@ -37,6 +38,9 @@ public class ArbitrageTrade implements Runnable {
     private Thread thread;
     private Boolean isCancelRequired;
 
+    @Setter
+    private StringBuilder emailStringBuilder = null;
+
     public void setTradeStatus(TradeStatus status) {
         synchronized (this) {
             tradeStatus = status;
@@ -48,10 +52,10 @@ public class ArbitrageTrade implements Runnable {
     }
 
     public void setIsCancelRequired(boolean cancelRequired, String cause) {
-        cause = (cause != null && !"".equals(cause)) ? cause : "ë¶ˆëª…";
+        cause = (cause != null && !"".equals(cause)) ? cause : "ºÒ¸í";
         synchronized (isCancelRequired) {
             if (cancelRequired) {
-                //log("ê±°ë˜ ì·¨ì†Œê°€ ìš”ì²­ë¨ (ì›ì¸: " + cause + ")");
+                //log("°Å·¡ Ãë¼Ò°¡ ¿äÃ»µÊ (¿øÀÎ: " + cause + ")");
             }
             isCancelRequired = cancelRequired;
         }
@@ -65,7 +69,11 @@ public class ArbitrageTrade implements Runnable {
 
     private void log(String str) {
         String indention = orderType == OrderType.SELL ? " " : "\t\t\t\t\t\t\t\t\t\t\t\t\t";
-        System.out.printf("%s%s[%s] %s\n", CmnUtil.timeToString(new Date()), indention, orderType.name(), str);
+        String logStr = String.format("%s%s[%s] %s\n", CmnUtil.timeToString(new Date()), indention, orderType.name(), str);
+        if(emailStringBuilder != null) {
+            emailStringBuilder.append(logStr);
+        }
+        System.out.printf(logStr);
     }
 
     public ArbitrageTrade(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity) {
@@ -89,22 +97,22 @@ public class ArbitrageTrade implements Runnable {
     public void run() {
         try {
             if(isCancelRequired()) {
-                log("ê±°ë˜ ì·¨ì†Œê°€ ìš”ì²­ë˜ì–´ ì¢…ë£Œ");
+                log("°Å·¡ Ãë¼Ò°¡ ¿äÃ»µÇ¾î Á¾·á");
                 return;
             }
             makeOrder();
         }
         catch (Exception e) {
-            log("ê·¸ëŸ´ë¦¬ ì—†ëŠ”ë°...ì¢…ë£Œ " + e);
-            oppositeTrade.setIsCancelRequired(true, "ìƒëŒ€ë°©ì˜ ì›ì¸ ë¶ˆëª… ì˜¤ë¥˜");
+            log("±×·²¸® ¾ø´Âµ¥...Á¾·á " + e);
+            oppositeTrade.setIsCancelRequired(true, "»ó´ë¹æÀÇ ¿øÀÎ ºÒ¸í ¿À·ù");
             return;
         }
 
         try {
             if(isCancelRequired()) {
-                log("ê±°ë˜ ì·¨ì†Œê°€ ìš”ì²­ë˜ì–´ ê±°ë˜ ì·¨ì†Œ ì‹œë„");
+                log("°Å·¡ Ãë¼Ò°¡ ¿äÃ»µÇ¾î °Å·¡ Ãë¼Ò ½Ãµµ");
                 tryCancelOrder();
-                log("ì¢…ë£Œ");
+                log("Á¾·á");
                 return;
             }
             waitOrderCompleted();
@@ -117,7 +125,7 @@ public class ArbitrageTrade implements Runnable {
             catch (Exception e2) {
                 log(e2.getMessage());
             }
-            log("ì¢…ë£Œ");
+            log("Á¾·á");
             return;
         }
 
@@ -125,28 +133,28 @@ public class ArbitrageTrade implements Runnable {
             while(oppositeTrade.getTradeStatus() != TradeStatus.ORDER_COMPLETED
                     && oppositeTrade.getTradeStatus() != TradeStatus.ORDER_CANCELED) {
                 try {
-                    log("ìƒëŒ€ë°© ê±°ë˜ê°€ ëë‚  ë•Œê¹Œì§€ ëŒ€ê¸°");
+                    log("»ó´ë¹æ °Å·¡°¡ ³¡³¯ ¶§±îÁö ´ë±â");
                     oppositeTrade.wait();
-                    log("ëŒ€ê¸° ìƒíƒœ í’€ë¦¼");
+                    log("´ë±â »óÅÂ Ç®¸²");
                     if(isCancelRequired()) {
-                        log("ê±°ë˜ ì·¨ì†Œê°€ ìš”ì²­ë˜ì–´ ì—­ ê±°ë˜ ì‹œë„");
+                        log("°Å·¡ Ãë¼Ò°¡ ¿äÃ»µÇ¾î ¿ª °Å·¡ ½Ãµµ");
                         try {
                             if((CmnUtil.msTime() % 2 == 1) ? true : false)
-                                log("ì—­ ê±°ë˜ ì„±ê³µ");
+                                log("¿ª °Å·¡ ¼º°ø");
                             else
-                                throw new Exception("ì—­ ê±°ë˜ ì‹¤íŒ¨... ì•Œì•„ì„œ í•˜ì…ˆ");
+                                throw new Exception("¿ª °Å·¡ ½ÇÆĞ... ¾Ë¾Æ¼­ ÇÏ¼À");
                         }
                         catch (Exception e2) {
                             log(e2.getMessage());
                         }
-                        log("ì¢…ë£Œ");
+                        log("Á¾·á");
                         return;
                     }
                 }
                 catch (InterruptedException e) { }
             }
         }
-        log("ì¢…ë£Œ");
+        log("Á¾·á");
     }
 
     private void makeOrder() {
@@ -154,12 +162,12 @@ public class ArbitrageTrade implements Runnable {
             try {
                 orderId = exchange.makeOrder(orderType, coin, price, quantity);
                 setTradeStatus(TradeStatus.ORDER_MADE);
-                log("ê±°ë˜ ìƒì„± ì™„ë£Œ");
+                log("°Å·¡ »ı¼º ¿Ï·á");
             }
             catch (Exception e) {
-                log("ê±°ë˜ ìƒì„± ì‹¤íŒ¨ " + e);
-                setIsCancelRequired(true, "ê±°ë˜ ìƒì„± ì‹¤íŒ¨");
-                oppositeTrade.setIsCancelRequired(true, "ìƒëŒ€ë°©ì˜ ê±°ë˜ ìƒì„± ì‹¤íŒ¨");
+                log("°Å·¡ »ı¼º ½ÇÆĞ " + e);
+                setIsCancelRequired(true, "°Å·¡ »ı¼º ½ÇÆĞ");
+                oppositeTrade.setIsCancelRequired(true, "»ó´ë¹æÀÇ °Å·¡ »ı¼º ½ÇÆĞ");
             }
         }
     }
@@ -172,7 +180,7 @@ public class ArbitrageTrade implements Runnable {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
                         setTradeStatus(TradeStatus.ORDER_COMPLETED);
-                        log("ê±°ë˜ ì„±ì‚¬ ì™„ë£Œ");
+                        log("°Å·¡ ¼º»ç ¿Ï·á");
                         isSuccess = true;
                         break;
                     }
@@ -184,7 +192,7 @@ public class ArbitrageTrade implements Runnable {
             }
 
             if(!isSuccess)
-                throw new Exception("ê±°ë˜ê°€ ì œí•œ ì‹œê°„ ë‚´ì— ì„±ì‚¬ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. " + finalException);
+                throw new Exception("°Å·¡°¡ Á¦ÇÑ ½Ã°£ ³»¿¡ ¼º»çµÇÁö ¾Ê¾Ò½À´Ï´Ù. " + finalException);
         }
     }
 
@@ -204,13 +212,13 @@ public class ArbitrageTrade implements Runnable {
                     Thread.sleep(TRIAL_TIME_INTERVAL);
                 }
                 if(!isSuccess) {
-                    throw new Exception("ì·¨ì†Œ ì‹¤íŒ¨ " + finalException);
+                    throw new Exception("Ãë¼Ò ½ÇÆĞ " + finalException);
                 }
             }
             setTradeStatus(TradeStatus.ORDER_CANCELED);
-            log("ê±°ë˜ ì·¨ì†Œ ì™„ë£Œ");
+            log("°Å·¡ Ãë¼Ò ¿Ï·á");
             synchronized (oppositeTrade.isCancelRequired()) {
-                oppositeTrade.setIsCancelRequired(true, "ìƒëŒ€ë°©ì˜ ê±°ë˜ ì·¨ì†Œ");
+                oppositeTrade.setIsCancelRequired(true, "»ó´ë¹æÀÇ °Å·¡ Ãë¼Ò");
             }
         }
     }
@@ -219,7 +227,7 @@ public class ArbitrageTrade implements Runnable {
         try {
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
             PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
-            double reducedQuantity = quantity * 0.9985; // ìˆ˜ìˆ˜ë£Œ ì œì™¸
+            double reducedQuantity = quantity * 0.9985; // ¼ö¼ö·á Á¦¿Ü
             ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, reducedQuantity);
             exchange.makeOrder(orderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
         }

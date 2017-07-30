@@ -79,7 +79,7 @@ public class CoinoneService implements ArbitrageExchange {
     @Override
     public double getBalance(Coin coin) throws Exception {
         if(coin == Coin.XRP) {
-            return 3000.0;
+            return 3000.0; // TODO : HARDCODED
         }
 
         long nonce = CmnUtil.nsTime();

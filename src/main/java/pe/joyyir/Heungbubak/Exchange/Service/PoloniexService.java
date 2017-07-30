@@ -49,7 +49,7 @@ public class PoloniexService {
     }
 
     public double getCompleteBalance() throws Exception {
-        long nonce = 1501201600000000000L + CmnUtil.nsTime()/1000;
+        long nonce = 1501201600000000000L + CmnUtil.nsTime()/1000; // TODO : HARDCODED
         Double completeBal = 0.0;
 
         try {

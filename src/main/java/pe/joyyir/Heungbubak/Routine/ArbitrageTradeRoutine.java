@@ -56,7 +56,8 @@ public class ArbitrageTradeRoutine implements Routine{
             }
         }
         catch (Exception e) {
-            emailSender.setStringAndReady("ArbitrageTrade", sb.toString());
+            emailSender.setStringAndReady("ArbitrageTrade", e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -194,6 +195,8 @@ public class ArbitrageTradeRoutine implements Routine{
         appendAndPrint("\nstep 6. 거래 진행\n");
         ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, qty);
         ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, qty);
+        sellTrade.setEmailStringBuilder(sb);
+        buyTrade.setEmailStringBuilder(sb);
         sellTrade.setOppositeTrade(buyTrade);
         buyTrade.setOppositeTrade(sellTrade);
         sellTrade.start();
