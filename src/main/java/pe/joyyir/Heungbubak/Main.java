@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    private static final int DEFAULT_TIME_INTERVAL = 10000;
+    private static final int DEFAULT_TIME_INTERVAL = 5000;
 
     public static void main(String[] args) {
         int timeInterval = DEFAULT_TIME_INTERVAL;

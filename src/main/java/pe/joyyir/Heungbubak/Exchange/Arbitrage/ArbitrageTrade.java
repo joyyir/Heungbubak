@@ -223,16 +223,19 @@ public class ArbitrageTrade implements Runnable {
         }
     }
 
-    private void tryReverseOrder() {
+    private void tryReverseOrder() throws Exception{
+        String orderId = "";
         try {
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
             PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
             double reducedQuantity = quantity * 0.9985; // 수수료 제외
             ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, reducedQuantity);
-            exchange.makeOrder(orderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
+            orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
+            // TODO - 거래 성사 대기 -> 복구
+
         }
         catch (Exception e) {
-
+            throw new Exception("역거래 실패... " + e);
         }
     }
 }

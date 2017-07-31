@@ -18,8 +18,8 @@ public class ArbitrageTradeRoutine implements Routine{
     private final int MIN_DIFF_ETC = 100;//100;
     private final int MIN_DIFF_XRP = 1;
 
-    private final Coin[] COIN_ARR = {Coin.BTC, Coin.ETC, Coin.ETH}; // XRP 제외 (코인원에서 미지원)
-    private final int[] DIFF_ARR = {MIN_DIFF_BTC, MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
+    private final Coin[] COIN_ARR = {Coin.ETC, Coin.ETH}; // XRP 제외 (코인원에서 미지원)
+    private final int[] DIFF_ARR = {MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
     private boolean[] canNoticeArr = {true, true, true, true};
     private int[] noticeCountArr = {0, 0, 0, 0};
 
@@ -124,24 +124,22 @@ public class ArbitrageTradeRoutine implements Routine{
         }
 
         // step 3. 거래 가능한 보유 수량 확인
-        double sellQty = sellExchange.getBalance(coin);
-        double buyQty = buyExchange.getBalance(Coin.KRW) / sellPrice;
-        double qty = Math.min(sellQty, buyQty);
+        double sellKrwBalance = sellExchange.getBalance(Coin.KRW);
+        double sellCoinQty = sellExchange.getBalance(coin);
+
+        double buyKrwBalance = buyExchange.getBalance(Coin.KRW);
+        double buyCoinQty = buyExchange.getBalance(coin);
+        double buyAvailQty = buyKrwBalance / buyPrice;
+
+        double qty = Math.min(sellCoinQty, buyAvailQty);
         long expectedProfit = (long) ((sellPrice - buyPrice) * qty);
         if (DEBUG) {
             String debugMsg =
                 "\nstep 3. 거래 가능한 보유 수량 확인\n" +
-                String.format("\t%s에서 %f개 판매 가능, %s에서 %f개 구매 가능\n", DEBUG_SELL_EXCHANGE, sellQty, DEBUG_BUY_EXCHANGE, buyQty) +
+                String.format("\t%s에서 %f개 판매 가능, %s에서 %f개 구매 가능\n", DEBUG_SELL_EXCHANGE, sellCoinQty, DEBUG_BUY_EXCHANGE, buyAvailQty) +
                 String.format("\t=> 최대 거래량: %f개\n", qty) +
                 String.format("\t=> 예상 이익: %d KRW\n", expectedProfit);
             appendAndPrint(debugMsg);
-        }
-
-        if (expectedProfit < MIN_PROFIT) {
-            if (DEBUG) {
-                appendAndPrint("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
-            }
-            return false;
         }
 
         /*
@@ -163,24 +161,27 @@ public class ArbitrageTradeRoutine implements Routine{
         ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
         ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
         long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
-        long realSellPrice = sellArbitPrice.getMaximinimumPrice();
-        long realBuyPrice = buyArbitPrice.getMaximinimumPrice();
+        long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (내가 팔) 최소 판매가 (최악의 조건)
+        long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (내가 살) 최대 구입가 (최악의 조건)
+        double realQty = Math.min(sellCoinQty, buyKrwBalance / realBuyPrice);
         long minmaxDiff = realSellPrice - realBuyPrice;
+        long realExpectedProfit = (long) (minmaxDiff * realQty);
         if (DEBUG) {
             String debugMsg =
                 "\nstep 5. 실제 거래 가격 산정\n" +
-                String.format("\t%f개 거래시,\n", qty) +
+                String.format("\t%f개 거래시,\n", realQty) +
                 String.format("\t%s에서 평균가 %d, 최저가 %d에 판매\n", DEBUG_SELL_EXCHANGE, sellArbitPrice.getAveragePrice(), sellArbitPrice.getMaximinimumPrice()) +
                 String.format("\t%s에서 평균가 %d, 최고가 %d에 구매\n", DEBUG_BUY_EXCHANGE, buyArbitPrice.getAveragePrice(), buyArbitPrice.getMaximinimumPrice()) +
-                String.format("\t평균가 차익: %d, 최저최고가 차익: %d\n", avgDiff, minmaxDiff);
+                String.format("\t평균가 차익: %d, 최저최고가 차익: %d\n", avgDiff, minmaxDiff) +
+                String.format("\t=> 예상 이익: %d KRW\n", realExpectedProfit);
             appendAndPrint(debugMsg);
         }
 
-        if (avgDiff < MIN_DIFF || minmaxDiff < MIN_DIFF) {
-            appendAndPrint("\t=> 차익이 충분히 나지 않으므로 거래를 취소합니다.\n");
+        if (realExpectedProfit < MIN_PROFIT) {
+            if (DEBUG) {
+                appendAndPrint("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
+            }
             return false;
-        } else {
-            appendAndPrint("\t=> 차익이 충분하므로 거래를 진행합니다.\n");
         }
 
         if (true) {
@@ -189,8 +190,8 @@ public class ArbitrageTradeRoutine implements Routine{
 
         // step 6. 거래 진행
         appendAndPrint("\nstep 6. 거래 진행\n");
-        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, qty);
-        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, qty);
+        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realQty);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realQty);
         sellTrade.setEmailStringBuilder(sb);
         buyTrade.setEmailStringBuilder(sb);
         sellTrade.setOppositeTrade(buyTrade);
@@ -211,6 +212,16 @@ public class ArbitrageTradeRoutine implements Routine{
             appendAndPrint("\t거래 성공!!!\n");
             appendAndPrint("\t판매 결과: " + sellExchange.getOrderInfo(sellTrade.getOrderId(), coin, OrderType.SELL).toString() + "\n");
             appendAndPrint("\t구매 결과: " + buyExchange.getOrderInfo(buyTrade.getOrderId(), coin, OrderType.BUY).toString() + "\n");
+
+            double sellKrwBalance2 = sellExchange.getBalance(Coin.KRW); // 증가
+            double sellCoinQty2 = sellExchange.getBalance(coin); // 감소
+            double buyKrwBalance2 = buyExchange.getBalance(Coin.KRW); // 감소
+            double buyCoinQty2 = buyExchange.getBalance(coin); // 증가
+
+            // sellExchange에서 코인in, 돈out
+            // buyExchange에서 코인out, 돈in
+            String debugMsg = String.format("\t[sell] %s: %+.0f KRW, %+.4f %s\n\t[buy ] %s: %+.0f KRW, %+.4f %s\n", DEBUG_SELL_EXCHANGE, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinQty, coin.name(), DEBUG_BUY_EXCHANGE, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinQty, coin.name());
+            appendAndPrint(debugMsg);
         }
         else {
             // 거래 실패

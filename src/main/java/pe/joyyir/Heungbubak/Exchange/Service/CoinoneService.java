@@ -137,7 +137,7 @@ public class CoinoneService implements ArbitrageExchange {
         params.put("access_token", accessToken);
         params.put("address", toAddress);
         params.put("auth_number", authNumber); // 2-Factor Authentication number. (int)
-        params.put("qty", quantity);
+        params.put("qty", String.format("%.4f", Math.floor(quantity*10000)/10000));
         params.put("type", walletType); // Type of wallet. 'trade' or 'normal'
         params.put("from_address", fromAddress);
         params.put("nonce", nonce);
@@ -161,6 +161,9 @@ public class CoinoneService implements ArbitrageExchange {
                 break;
             case "103":
                 desc = "Lack of Balance";
+                break;
+            case "107":
+                desc = "Parameter error";
                 break;
             default:
                 desc = errorCode;
@@ -186,11 +189,14 @@ public class CoinoneService implements ArbitrageExchange {
         JSONObject params = new JSONObject();
         params.put("access_token", accessToken);
         params.put("price", price);
-        params.put("qty", quantity);
+        params.put("qty", String.format("%.4f", Math.floor(quantity*10000)/10000));
         params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
 
         JSONObject result = callPrivateApi(url, params);
+
+        //System.out.println(result.toString());
+
         errorCheck(result);
         return result.getString("orderId");
     }
@@ -211,7 +217,7 @@ public class CoinoneService implements ArbitrageExchange {
         params.put("access_token", accessToken);
         params.put("order_id", orderId);
         params.put("price", krwPrice);
-        params.put("qty", quantity);
+        params.put("qty", String.format("%.4f", Math.floor(quantity*10000)/10000));
         params.put("is_ask", (orderType == OrderType.SELL) ? 1 : 0);
         params.put("currency", coin.name().toLowerCase());
         params.put("nonce", nonce);
@@ -222,7 +228,7 @@ public class CoinoneService implements ArbitrageExchange {
 
     @Override
     public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
-        return getOrderInfo(orderId, coin, null);
+        return getOrderInfo(orderId, coin);
     }
 
     public JSONObject getOrderInfo(String orderId, Coin coin) throws Exception {
@@ -257,9 +263,15 @@ public class CoinoneService implements ArbitrageExchange {
             comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
             */
 
-            String orderId = comm.makeOrder(OrderType.SELL, Coin.XRP, 1000000, 0.05);
-            System.out.println(comm.isOrderCompleted(orderId, OrderType.SELL, Coin.XRP));
-            comm.cancelOrder(orderId, OrderType.SELL, Coin.XRP, 1000000, 0.05);
+            String orderId = comm.makeOrder(OrderType.SELL, Coin.ETC, 1000000, 0.0115);
+            System.out.println(comm.isOrderCompleted(orderId, OrderType.SELL, Coin.ETC));
+            comm.cancelOrder(orderId, OrderType.SELL, Coin.ETC, 1000000, 0.0115);
+
+            Thread.sleep(1000);
+
+            String orderId2 = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
+            System.out.println(comm.isOrderCompleted(orderId2, OrderType.BUY, Coin.ETC));
+            comm.cancelOrder(orderId2, OrderType.BUY, Coin.ETC, 10000, 0.01);
 
             //comm.getMarketPrice(Coin.BTC, PriceType.BUY);
 

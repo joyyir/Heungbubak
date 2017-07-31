@@ -44,6 +44,9 @@ public class BithumbService implements ArbitrageExchange {
             BithumbService comm = new BithumbService();
             CoinoneService coinComm = new CoinoneService();
 
+            double quantity = 0.99992;
+            System.out.println(String.format("%+.0f", Math.floor(quantity*10000)/10000));
+
             /*
             comm.sendCoin(Coin.BTC, 0.001f, "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59", null); // 수수료 포함 0.001 BTC
             */
@@ -61,9 +64,19 @@ public class BithumbService implements ArbitrageExchange {
 
             //comm.withdrawalKRW(BankCode.SHINHAN, "110325467846", 10000);
 
-            //String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
-            //System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
-            comm.cancelOrder("123", OrderType.BUY, Coin.ETC, 1000, 0.1);
+            /*
+            String orderId = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.1);
+            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
+            comm.cancelOrder(orderId, OrderType.BUY, Coin.ETC, 1000, 0.1);
+
+            Thread.sleep(100);
+
+            String orderId2 = comm.makeOrder(OrderType.SELL, Coin.ETC, 23700, 0.1);
+            System.out.println(comm.isOrderCompleted(orderId2, OrderType.SELL, Coin.ETC));
+            comm.cancelOrder(orderId2, OrderType.SELL, Coin.ETC, 23700, 0.1);
+            comm.cancelOrder(orderId2, OrderType.SELL, Coin.ETC, 23700, 1);
+            */
+
 //            System.out.println(comm.isOrderCompleted(orderId, OrderType.BUY, Coin.ETC));
 
             //JSONObject result = comm.getOrderInfo("1500384872078", OrderType.BUY, Coin.ETC); // 성사된 거래
@@ -180,7 +193,7 @@ public class BithumbService implements ArbitrageExchange {
         Map<String, String> params = new HashMap<>();
         params.put("order_currency", coin.name().toUpperCase());
         params.put("Payment_currency", "KRW");
-        params.put("units", String.valueOf(quantity));
+        params.put("units", String.format("%.4f", Math.floor(quantity*10000)/10000)); // 코인 수량은 소수점 4째짜리 까지만 입력가능
         params.put("price", String.valueOf(price));
         params.put("type", orderType.toString());
 
@@ -188,6 +201,7 @@ public class BithumbService implements ArbitrageExchange {
         JSONObject result = dao.callApi(endpoint, params);
 
         //System.out.println(result.toString());
+
         errorCheck(result, "Making order");
         return result.getString("order_id");
     }
@@ -262,8 +276,13 @@ public class BithumbService implements ArbitrageExchange {
         String status = result.getString("status");
         if (!status.equals(STATUS_CODE_SUCCESS)) {
             String customMsg = "";
-            if(status.equals(STATUS_CODE_CUSTOM))
-                customMsg = result.getJSONObject("message").getString("message");
+            if(status.equals(STATUS_CODE_CUSTOM)) {
+                Object message = result.get("message");
+                if(message instanceof String)
+                    customMsg = result.getString("message"); // {"message":"최소 구매수량은 0.1ETC 입니다.","status":"5600"}
+                else if(message instanceof JSONObject)
+                    customMsg = result.getJSONObject("message").getString("message");
+            }
             throw new Exception(funcName + " failed! (tradeStatus: " + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
         }
     }
