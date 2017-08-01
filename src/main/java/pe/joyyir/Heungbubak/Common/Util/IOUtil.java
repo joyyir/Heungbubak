@@ -2,17 +2,29 @@ package pe.joyyir.Heungbubak.Common.Util;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 
 public class IOUtil {
 
     public static JSONObject readJson(String filepath) throws Exception {
-        byte[] b = new byte[1024];
-        FileInputStream input = new FileInputStream(filepath);
-        input.read(b);
-        input.close();
-        return new JSONObject(new String(b));
+        BufferedReader br = new BufferedReader(new FileReader(filepath));
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+
+            return new JSONObject(sb.toString());
+        } finally {
+            br.close();
+        }
     }
 
     public static void writeJson(String filepath, JSONObject jsonObject) throws Exception {

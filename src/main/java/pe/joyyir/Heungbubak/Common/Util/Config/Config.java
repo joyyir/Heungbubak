@@ -4,8 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
 import pe.joyyir.Heungbubak.Common.Util.IOUtil;
+
+import java.util.*;
 
 public class Config {
     private static final String CONFIG_FILE = "config.json";
@@ -77,9 +80,30 @@ public class Config {
 
     public static ArbitrageConfigVO getArbitrageConfig() {
         ArbitrageConfigVO vo = new ArbitrageConfigVO();
-        JSONObject json = config.getJSONObject("arbitrage");
-        vo.setMinProfit(json.getLong("minProfit"));
-        // TODO : 개발 해야함
-        return null;
+        JSONObject arbitrage = config.getJSONObject("arbitrage");
+        JSONObject minDiff = arbitrage.getJSONObject("minDiff");
+        JSONArray targetCoin = arbitrage.getJSONArray("targetCoin");
+
+        Iterator it = minDiff.keys();
+        Map<Coin, Long> minDiffMap = new HashMap<>();
+        while (it.hasNext()) {
+            String coinStr = ((String) it.next()).toUpperCase();
+            Coin coin = Coin.valueOf(coinStr);
+            long diff = minDiff.getLong(coinStr);
+            minDiffMap.put(coin, diff);
+        }
+
+        List<Coin> targetCoinArr = new ArrayList<>();
+        for(int i = 0; i < targetCoin.length(); i++) {
+            String coinStr = targetCoin.getString(i).toUpperCase();
+            Coin coin = Coin.valueOf(coinStr);
+            targetCoinArr.add(coin);
+        }
+
+        vo.setMinProfit(arbitrage.getLong("minProfit"));
+        vo.setMinDiffMap(minDiffMap);
+        vo.setTargetCoin(targetCoinArr);
+
+        return vo;
     }
 }

@@ -1,9 +1,10 @@
 package pe.joyyir.Heungbubak.Routine;
 
-import lombok.Setter;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
+import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
 import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
 import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
@@ -12,23 +13,10 @@ import pe.joyyir.Heungbubak.Exchange.Arbitrage.DummyTrade;
 import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
 import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
 
+import java.util.List;
+
 public class ArbitrageTradeRoutine implements Routine{
-    private final int MIN_DIFF_BTC = 20000;
-    private final int MIN_DIFF_ETH = 2000;
-    private final int MIN_DIFF_ETC = 100;//100;
-    private final int MIN_DIFF_XRP = 1;
-
-    private final Coin[] COIN_ARR = {Coin.ETC}; // XRP 제외 (코인원에서 미지원)
-    private final int[] DIFF_ARR = {MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
-    private boolean[] canNoticeArr = {true, true, true, true};
-    private int[] noticeCountArr = {0, 0, 0, 0};
-
-    private CoinoneService coinone = new CoinoneService();
-    private BithumbService bithumb = new BithumbService();
-
     private StringBuilder sb = new StringBuilder();
-
-    @Setter
     private EmailSender emailSender = null;
 
     public ArbitrageTradeRoutine(EmailSender emailSender) throws Exception {
@@ -38,11 +26,14 @@ public class ArbitrageTradeRoutine implements Routine{
     @Override
     public void run() {
         try {
-            for(int i = 0; i < COIN_ARR.length; i++) {
-                final Coin coin = COIN_ARR[i];
-                final int MIN_DIFF = DIFF_ARR[i];
-                final long MIN_PROFIT = 1000;
-                makeMoney(coin, MIN_DIFF, MIN_PROFIT);
+            ArbitrageConfigVO arbitrageConfigVO = Config.getArbitrageConfig();
+            List<Coin> targetCoinArr = arbitrageConfigVO.getTargetCoin();
+            final long minProfit = arbitrageConfigVO.getMinProfit();
+
+            for(int i = 0; i < targetCoinArr.size(); i++) {
+                final Coin coin = targetCoinArr.get(i);
+                final long minDiff = arbitrageConfigVO.getMinDiffMap().get(coin);
+                makeMoney(coin, minDiff, minProfit);
 
                 if(emailSender.isReady()) {
                     emailSender.setString("ArbitrageTrade", sb.toString());
@@ -57,7 +48,7 @@ public class ArbitrageTradeRoutine implements Routine{
         }
     }
 
-    public boolean makeMoney(final Coin coin, final int MIN_DIFF, final long MIN_PROFIT) throws Exception {
+    public boolean makeMoney(final Coin coin, final long minDiff, final long minProfit) throws Exception {
         final boolean DEBUG = true;
         String DEBUG_SELL_EXCHANGE = "", DEBUG_BUY_EXCHANGE = "";
 
@@ -87,7 +78,7 @@ public class ArbitrageTradeRoutine implements Routine{
         }
 
         // step 2. 거래 타이밍인지 확인
-        if (bithumbBuyPrice - coinoneSellPrice >= MIN_DIFF) { // 빗썸에서 팔고 코인원에서 산다.
+        if (bithumbBuyPrice - coinoneSellPrice >= minDiff) { // 빗썸에서 팔고 코인원에서 산다.
             isTiming = true;
             emailSender.setReady(true);
             sellExchange = bithumb;
@@ -100,7 +91,7 @@ public class ArbitrageTradeRoutine implements Routine{
                 String debugMsg = "\nstep 2. 거래 타이밍인지 확인\n" + "\t빗썸에서 팔고 코인원에서 산다.\n";
                 appendAndPrint(debugMsg);
             }
-        } else if (coinoneBuyPrice - bithumbSellPrice >= MIN_DIFF) { // 코인원에서 팔고 빗썸에서 산다.
+        } else if (coinoneBuyPrice - bithumbSellPrice >= minDiff) { // 코인원에서 팔고 빗썸에서 산다.
             isTiming = true;
             emailSender.setReady(true);
             sellExchange = coinone;
@@ -177,7 +168,7 @@ public class ArbitrageTradeRoutine implements Routine{
             appendAndPrint(debugMsg);
         }
 
-        if (realExpectedProfit < MIN_PROFIT) {
+        if (realExpectedProfit < minProfit) {
             if (DEBUG) {
                 appendAndPrint("\t=> 예상 이익이 기준보다 적어서 거래하지 않습니다.\n");
             }
@@ -220,7 +211,7 @@ public class ArbitrageTradeRoutine implements Routine{
 
             // sellExchange에서 코인in, 돈out
             // buyExchange에서 코인out, 돈in
-            String debugMsg = String.format("\t[sell] %s: %+.0f KRW, %+.4f %s\n\t[buy ] %s: %+.0f KRW, %+.4f %s\n", DEBUG_SELL_EXCHANGE, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinQty, coin.name(), DEBUG_BUY_EXCHANGE, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinQty, coin.name());
+            String debugMsg = String.format("\t[sell] %s: %+.0f KRW, %+.4f %s\n\t[buy] %s: %+.0f KRW, %+.4f %s\n", DEBUG_SELL_EXCHANGE, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinQty, coin.name(), DEBUG_BUY_EXCHANGE, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinQty, coin.name());
             appendAndPrint(debugMsg);
         }
         else {
