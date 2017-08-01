@@ -1,6 +1,6 @@
 package pe.joyyir.Heungbubak.Exchange.ApiKey;
 
-import pe.joyyir.Heungbubak.Common.Util.Config;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 import lombok.Getter;
 import lombok.Setter;

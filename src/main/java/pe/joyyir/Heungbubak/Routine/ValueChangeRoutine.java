@@ -5,7 +5,7 @@ import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
 import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 import pe.joyyir.Heungbubak.Exchange.Service.PoloniexService;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
-import pe.joyyir.Heungbubak.Common.Util.Config;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import lombok.Setter;
 import org.json.JSONObject;
 

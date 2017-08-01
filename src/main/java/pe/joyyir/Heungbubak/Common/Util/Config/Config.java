@@ -1,9 +1,11 @@
-package pe.joyyir.Heungbubak.Common.Util;
+package pe.joyyir.Heungbubak.Common.Util.Config;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
+import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 
 public class Config {
     private static final String CONFIG_FILE = "config.json";
@@ -71,5 +73,13 @@ public class Config {
 
     public static long getInvestment() {
         return config.getLong("investment");
+    }
+
+    public static ArbitrageConfigVO getArbitrageConfig() {
+        ArbitrageConfigVO vo = new ArbitrageConfigVO();
+        JSONObject json = config.getJSONObject("arbitrage");
+        vo.setMinProfit(json.getLong("minProfit"));
+        // TODO : 개발 해야함
+        return null;
     }
 }

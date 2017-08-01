@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class ArbitrageTrade implements Runnable {
     // parameters
-    final int TRIAL = 5;
+    final int TRIAL = 10;
     final int TRIAL_TIME_INTERVAL = 1000;
 
     public enum TradeStatus {
@@ -137,6 +137,8 @@ public class ArbitrageTrade implements Runnable {
                     oppositeTrade.wait();
                     log("대기 상태 풀림");
                     if(isCancelRequired()) {
+                        log("거래 취소가 요청되어 역 거래가 필요합니다!!!");
+                        /*
                         log("거래 취소가 요청되어 역 거래 시도");
                         try {
                             if((CmnUtil.msTime() % 2 == 1) ? true : false)
@@ -147,6 +149,7 @@ public class ArbitrageTrade implements Runnable {
                         catch (Exception e2) {
                             log(e2.getMessage());
                         }
+                        */
                         log("종료");
                         return;
                     }
@@ -175,7 +178,7 @@ public class ArbitrageTrade implements Runnable {
     private void waitOrderCompleted() throws Exception {
         synchronized (tradeStatus) {
             boolean isSuccess = false;
-            Exception finalException = null;
+            Exception finalException = new Exception("Undefined");
             for(int trial = 0; trial < TRIAL; trial++) {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
@@ -200,7 +203,7 @@ public class ArbitrageTrade implements Runnable {
         synchronized (tradeStatus) {
             if (tradeStatus == TradeStatus.ORDER_MADE) {
                 boolean isSuccess = false;
-                Exception finalException = null;
+                Exception finalException = new Exception("Undefined");
                 for (int trial = 0; trial < TRIAL; trial++) {
                     try {
                         exchange.cancelOrder(orderId, orderType, coin, price, quantity);

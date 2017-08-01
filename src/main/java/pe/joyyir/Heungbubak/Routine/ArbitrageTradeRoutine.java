@@ -18,7 +18,7 @@ public class ArbitrageTradeRoutine implements Routine{
     private final int MIN_DIFF_ETC = 100;//100;
     private final int MIN_DIFF_XRP = 1;
 
-    private final Coin[] COIN_ARR = {Coin.ETC, Coin.ETH}; // XRP 제외 (코인원에서 미지원)
+    private final Coin[] COIN_ARR = {Coin.ETC}; // XRP 제외 (코인원에서 미지원)
     private final int[] DIFF_ARR = {MIN_DIFF_ETC, MIN_DIFF_ETH, MIN_DIFF_XRP};
     private boolean[] canNoticeArr = {true, true, true, true};
     private int[] noticeCountArr = {0, 0, 0, 0};
@@ -52,7 +52,7 @@ public class ArbitrageTradeRoutine implements Routine{
             }
         }
         catch (Exception e) {
-            emailSender.setStringAndReady("ArbitrageTrade", e.getMessage());
+            emailSender.setStringAndReady("ArbitrageTrade", "단순 에러 발생: " + e.getMessage());
             e.printStackTrace();
         }
     }

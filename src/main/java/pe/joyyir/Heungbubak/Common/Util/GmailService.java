@@ -14,6 +14,7 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 import org.apache.commons.codec.binary.Base64;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;

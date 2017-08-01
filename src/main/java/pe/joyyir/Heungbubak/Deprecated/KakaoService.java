@@ -1,6 +1,6 @@
 package pe.joyyir.Heungbubak.Deprecated;
 
-import pe.joyyir.Heungbubak.Common.Util.Config;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
 import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 import org.json.JSONObject;
