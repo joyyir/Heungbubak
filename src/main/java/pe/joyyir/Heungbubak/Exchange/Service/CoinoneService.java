@@ -162,6 +162,9 @@ public class CoinoneService implements ArbitrageExchange {
             case "103":
                 desc = "Lack of Balance";
                 break;
+            case "104":
+                desc = "Order id is not exist";
+                break;
             case "107":
                 desc = "Parameter error";
                 break;

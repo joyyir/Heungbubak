@@ -16,7 +16,7 @@ public class ArbitrageTrade implements Runnable {
     final int TRIAL_TIME_INTERVAL = 1000;
 
     public enum TradeStatus {
-        START, ORDER_MADE, ORDER_CANCELED, ORDER_COMPLETED
+        START, ORDER_MADE, ORDER_CANCELED, ORDER_COMPLETED, ORDER_CANCEL_FAILED
     }
     @Getter
     private TradeStatus tradeStatus;
@@ -95,18 +95,12 @@ public class ArbitrageTrade implements Runnable {
 
     @Override
     public void run() {
-        try {
-            if(isCancelRequired()) {
-                log("거래 취소가 요청되어 종료");
-                return;
-            }
-            makeOrder();
-        }
-        catch (Exception e) {
-            log("그럴리 없는데...종료 " + e);
-            oppositeTrade.setIsCancelRequired(true, "상대방의 원인 불명 오류");
+        if(isCancelRequired()) {
+            log("거래 취소가 요청되어 종료");
+            setTradeStatus(TradeStatus.ORDER_CANCELED);
             return;
         }
+        makeOrder();
 
         try {
             if(isCancelRequired()) {
@@ -124,14 +118,16 @@ public class ArbitrageTrade implements Runnable {
             }
             catch (Exception e2) {
                 log(e2.getMessage());
+                setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
+                log("종료");
+                return;
             }
-            log("종료");
-            return;
         }
 
         synchronized (oppositeTrade) {
             while(oppositeTrade.getTradeStatus() != TradeStatus.ORDER_COMPLETED
-                    && oppositeTrade.getTradeStatus() != TradeStatus.ORDER_CANCELED) {
+                    && oppositeTrade.getTradeStatus() != TradeStatus.ORDER_CANCELED
+                    && oppositeTrade.getTradeStatus() != TradeStatus.ORDER_CANCEL_FAILED) {
                 try {
                     log("상대방 거래가 끝날 때까지 대기");
                     oppositeTrade.wait();
@@ -178,7 +174,7 @@ public class ArbitrageTrade implements Runnable {
     private void waitOrderCompleted() throws Exception {
         synchronized (tradeStatus) {
             boolean isSuccess = false;
-            Exception finalException = new Exception("Undefined");
+            Exception finalException = null;
             for(int trial = 0; trial < TRIAL; trial++) {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
@@ -195,7 +191,7 @@ public class ArbitrageTrade implements Runnable {
             }
 
             if(!isSuccess)
-                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + finalException);
+                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + ((finalException == null) ? "" : finalException));
         }
     }
 
@@ -203,7 +199,7 @@ public class ArbitrageTrade implements Runnable {
         synchronized (tradeStatus) {
             if (tradeStatus == TradeStatus.ORDER_MADE) {
                 boolean isSuccess = false;
-                Exception finalException = new Exception("Undefined");
+                Exception finalException = null;
                 for (int trial = 0; trial < TRIAL; trial++) {
                     try {
                         exchange.cancelOrder(orderId, orderType, coin, price, quantity);
@@ -215,7 +211,7 @@ public class ArbitrageTrade implements Runnable {
                     Thread.sleep(TRIAL_TIME_INTERVAL);
                 }
                 if(!isSuccess) {
-                    throw new Exception("취소 실패 " + finalException);
+                    throw new Exception("취소 실패 " + ((finalException == null) ? "" : finalException));
                 }
             }
             setTradeStatus(TradeStatus.ORDER_CANCELED);
