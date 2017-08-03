@@ -137,9 +137,10 @@ public class ArbitrageTrade implements Runnable {
                     oppositeTrade.wait();
                     log("대기 상태 풀림");
                     if(isCancelRequired()) {
-                        log("거래 취소가 요청되어 역 거래를 진행합니다.");
+                        log("거래 취소가 요청되어 역거래를 진행합니다.");
                         try {
                             tryReverseOrder();
+                            log("역거래 성공!!!");
                             Coin reverseCoin;
                             double diff;
                             if(orderType == OrderType.BUY) {
