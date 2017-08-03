@@ -80,7 +80,6 @@ public class ArbitrageTradeRoutine implements Routine{
         // step 2. 거래 타이밍인지 확인
         if (bithumbBuyPrice - coinoneSellPrice >= minDiff) { // 빗썸에서 팔고 코인원에서 산다.
             isTiming = true;
-            emailSender.setReady(true);
             sellExchange = bithumb;
             sellPrice = bithumbBuyPrice;
             buyExchange = coinone;
@@ -93,7 +92,6 @@ public class ArbitrageTradeRoutine implements Routine{
             }
         } else if (coinoneBuyPrice - bithumbSellPrice >= minDiff) { // 코인원에서 팔고 빗썸에서 산다.
             isTiming = true;
-            emailSender.setReady(true);
             sellExchange = coinone;
             sellPrice = coinoneBuyPrice;
             buyExchange = bithumb;
@@ -120,7 +118,10 @@ public class ArbitrageTradeRoutine implements Routine{
 
         double buyKrwBalance = buyExchange.getBalance(Coin.KRW);
         double buyCoinQty = buyExchange.getBalance(coin);
-        double buyAvailQty = buyKrwBalance / buyPrice;
+        double buyAvailQty = buyExchange.getAvailableBuyQuantity(coin, (long)buyKrwBalance);
+
+        double krwSum = sellKrwBalance + buyKrwBalance;
+        double coinSum = sellCoinQty + buyCoinQty;
 
         double qty = Math.min(sellCoinQty, buyAvailQty);
         long expectedProfit = (long) ((sellPrice - buyPrice) * qty);
@@ -174,6 +175,7 @@ public class ArbitrageTradeRoutine implements Routine{
             }
             return false;
         }
+        emailSender.setReady(true);
 
         if (true) {
             //throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
@@ -181,8 +183,8 @@ public class ArbitrageTradeRoutine implements Routine{
 
         // step 6. 거래 진행
         appendAndPrint("\nstep 6. 거래 진행\n");
-        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realQty);
-        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realQty);
+        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realQty, sellKrwBalance, sellCoinQty);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realQty, buyKrwBalance, buyCoinQty);
         sellTrade.setEmailStringBuilder(sb);
         buyTrade.setEmailStringBuilder(sb);
         sellTrade.setOppositeTrade(buyTrade);
@@ -208,10 +210,13 @@ public class ArbitrageTradeRoutine implements Routine{
             double sellCoinQty2 = sellExchange.getBalance(coin); // 감소
             double buyKrwBalance2 = buyExchange.getBalance(Coin.KRW); // 감소
             double buyCoinQty2 = buyExchange.getBalance(coin); // 증가
+            double krwSum2 = sellKrwBalance2 + buyKrwBalance2;
+            double coinSum2 = sellCoinQty2 + buyCoinQty2;
 
             // sellExchange에서 코인in, 돈out
             // buyExchange에서 코인out, 돈in
-            String debugMsg = String.format("\t[sell] %s: %+.0f KRW, %+.4f %s\n\t[buy] %s: %+.0f KRW, %+.4f %s\n", DEBUG_SELL_EXCHANGE, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinQty, coin.name(), DEBUG_BUY_EXCHANGE, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinQty, coin.name());
+            String debugMsg = String.format("\t[SELL] %s: %+.0f KRW, %+.4f %s\n\t[BUY] %s: %+.0f KRW, %+.4f %s\n", DEBUG_SELL_EXCHANGE, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinQty, coin.name(), DEBUG_BUY_EXCHANGE, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinQty, coin.name());
+            debugMsg += String.format("\tTotal: %.0f KRW (%+.0f), %.4f %s (%+.4f)\n", krwSum2, krwSum2-krwSum, coinSum2, coin.name(), coinSum2-coinSum);
             appendAndPrint(debugMsg);
         }
         else {
@@ -227,8 +232,8 @@ public class ArbitrageTradeRoutine implements Routine{
     }
 
     private void testTrade() {
-        ArbitrageTrade sellTrade = new ArbitrageTrade(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100);
-        ArbitrageTrade buyTrade = new ArbitrageTrade(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100);
+        ArbitrageTrade sellTrade = new ArbitrageTrade(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50);
         sellTrade.setOppositeTrade(buyTrade);
         buyTrade.setOppositeTrade(sellTrade);
         sellTrade.start();

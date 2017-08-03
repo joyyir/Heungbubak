@@ -95,6 +95,33 @@ public class BithumbService implements ArbitrageExchange {
     }
 
     @Override
+    public double getAvailableBuyQuantity(Coin coin, long krwBalance) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "public/orderbook/" + coin.name().toLowerCase());
+        errorCheck(jsonObject, "getAverageMarketPrice");
+        JSONArray orders = jsonObject.getJSONObject("data").getJSONArray(PriceType.SELL.toString() + 's');
+        double sum = 0.0;
+        double left = krwBalance;
+        for(int i = 0; i < orders.length(); i++) {
+            JSONObject order = orders.getJSONObject(i);
+            long price = order.getLong("price");
+            double qty = order.getDouble("quantity");
+
+            if(price * qty > left) {
+                sum += left / price;
+                left = 0.0;
+                break;
+            }
+            else {
+                sum += qty;
+                left -= price * qty;
+            }
+        }
+        if(left > 0.0)
+            throw new Exception("Too much KRW");
+        return sum;
+    }
+
+    @Override
     public ArbitrageMarketPrice getArbitrageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
         ArbitrageMarketPrice marketPrice = new ArbitrageMarketPrice(0, 0);
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "public/orderbook/" + coin.name().toLowerCase());

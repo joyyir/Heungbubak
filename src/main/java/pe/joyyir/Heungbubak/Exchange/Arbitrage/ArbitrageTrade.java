@@ -6,7 +6,6 @@ import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
-import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 
 import java.util.Date;
 
@@ -37,6 +36,9 @@ public class ArbitrageTrade implements Runnable {
     @Getter
     private Thread thread;
     private Boolean isCancelRequired;
+
+    private double beforeKrwBalance;
+    private double beforeCoinBalance;
 
     @Setter
     private StringBuilder emailStringBuilder = null;
@@ -76,7 +78,7 @@ public class ArbitrageTrade implements Runnable {
         System.out.printf(logStr);
     }
 
-    public ArbitrageTrade(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity) {
+    public ArbitrageTrade(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity, double beforeKrwBal, double beforeCoinBal) {
         this.orderType = orderType;
         this.tradeStatus = TradeStatus.START;
         this.exchange = exchange;
@@ -87,6 +89,8 @@ public class ArbitrageTrade implements Runnable {
         this.orderId = null;
         this.thread = new Thread(this);
         this.isCancelRequired = false;
+        this.beforeCoinBalance = beforeCoinBal;
+        this.beforeKrwBalance = beforeKrwBal;
     }
 
     public void start() {
@@ -109,7 +113,7 @@ public class ArbitrageTrade implements Runnable {
                 log("종료");
                 return;
             }
-            waitOrderCompleted();
+            waitOrderCompletedSync();
         }
         catch (Exception e) {
             log(e.getMessage());
@@ -133,19 +137,34 @@ public class ArbitrageTrade implements Runnable {
                     oppositeTrade.wait();
                     log("대기 상태 풀림");
                     if(isCancelRequired()) {
-                        log("거래 취소가 요청되어 역 거래가 필요합니다!!!");
-                        /*
-                        log("거래 취소가 요청되어 역 거래 시도");
+                        log("거래 취소가 요청되어 역 거래를 진행합니다.");
                         try {
-                            if((CmnUtil.msTime() % 2 == 1) ? true : false)
-                                log("역 거래 성공");
-                            else
-                                throw new Exception("역 거래 실패... 알아서 하셈");
+                            tryReverseOrder();
+                            Coin reverseCoin;
+                            double diff;
+                            if(orderType == OrderType.BUY) {
+                                double afterKrwBalance = exchange.getBalance(Coin.KRW);
+                                diff = afterKrwBalance-beforeKrwBalance;
+                                reverseCoin = Coin.KRW;
+                            }
+                            else { // OrderType.SELL
+                                double afterCoinBalance = exchange.getBalance(coin);
+                                diff = afterCoinBalance-beforeCoinBalance;
+                                reverseCoin = coin;
+                            }
+
+                            if(diff > 0) {
+                                String logStr = String.format("다행히 이득이다! %+.0f %s", diff, reverseCoin.name());
+                                log(logStr);
+                            }
+                            else {
+                                String logStr = String.format("아쉽게도 손해다... %+.0f %s", diff, reverseCoin.name());
+                                log(logStr);
+                            }
                         }
-                        catch (Exception e2) {
-                            log(e2.getMessage());
+                        catch (Exception e) {
+                            log(e.getMessage());
                         }
-                        */
                         log("종료");
                         return;
                     }
@@ -171,28 +190,33 @@ public class ArbitrageTrade implements Runnable {
         }
     }
 
-    private void waitOrderCompleted() throws Exception {
+    private void waitOrderCompletedSync() throws Exception {
         synchronized (tradeStatus) {
-            boolean isSuccess = false;
-            Exception finalException = null;
-            for(int trial = 0; trial < TRIAL; trial++) {
-                try {
-                    if (exchange.isOrderCompleted(orderId, orderType, coin)) {
-                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
-                        log("거래 성사 완료");
-                        isSuccess = true;
-                        break;
-                    }
-                    Thread.sleep(TRIAL_TIME_INTERVAL);
-                }
-                catch (Exception e) {
-                    finalException = e;
-                }
-            }
-
-            if(!isSuccess)
-                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + ((finalException == null) ? "" : finalException));
+            waitOrderCompleted(orderId, orderType, coin, true);
         }
+    }
+
+    private void waitOrderCompleted(String orderId, OrderType orderType, Coin coin, boolean isSync) throws Exception {
+        boolean isSuccess = false;
+        Exception finalException = null;
+        for(int trial = 0; trial < TRIAL; trial++) {
+            try {
+                if (exchange.isOrderCompleted(orderId, orderType, coin)) {
+                    if(isSync)
+                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                    log("거래 성사 완료");
+                    isSuccess = true;
+                    break;
+                }
+                Thread.sleep(TRIAL_TIME_INTERVAL);
+            }
+            catch (Exception e) {
+                finalException = e;
+            }
+        }
+
+        if(!isSuccess)
+            throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + ((finalException == null) ? "" : finalException));
     }
 
     private void tryCancelOrder() throws Exception {
@@ -223,15 +247,21 @@ public class ArbitrageTrade implements Runnable {
     }
 
     private void tryReverseOrder() throws Exception{
-        String orderId = "";
         try {
+            double tradeQuantity;
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
             PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
-            double reducedQuantity = quantity * 0.9985; // 수수료 제외
-            ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, reducedQuantity);
-            orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), reducedQuantity);
-            // TODO - 거래 성사 대기 -> 복구
-
+            if(orderType == OrderType.BUY) {
+                double afterCoinBalance = exchange.getBalance(coin);
+                tradeQuantity = afterCoinBalance - beforeCoinBalance;
+            }
+            else { // OrderType.SELL
+                double afterKrwBalance = exchange.getBalance(Coin.KRW);
+                tradeQuantity = exchange.getAvailableBuyQuantity(coin, (long)(afterKrwBalance - beforeKrwBalance));
+            }
+            ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, tradeQuantity);
+            String orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), tradeQuantity);
+            waitOrderCompleted(orderId, reversedOrderType, coin, false);
         }
         catch (Exception e) {
             throw new Exception("역거래 실패... " + e);

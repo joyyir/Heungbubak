@@ -42,6 +42,33 @@ public class CoinoneService implements ArbitrageExchange {
     }
 
     @Override
+    public double getAvailableBuyQuantity(Coin coin, long krwBalance) throws Exception {
+        JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());
+        JSONArray orders = jsonObject.getJSONArray(PriceType.SELL.toString());
+        double sum = 0.0;
+        double left = krwBalance;
+        for(int i = 0; i < orders.length(); i++) {
+            JSONObject order = orders.getJSONObject(i);
+            long price = order.getLong("price");
+            double qty = order.getDouble("qty");
+
+            if(price * qty > left) {
+                sum += left / price;
+                left = 0.0;
+                break;
+            }
+            else {
+                sum += qty;
+                left -= price * qty;
+            }
+        }
+        if(left > 0.0)
+            throw new Exception("Too much KRW");
+        return sum;
+    }
+
+
+    @Override
     public ArbitrageMarketPrice getArbitrageMarketPrice(Coin coin, PriceType priceType, double quantity) throws Exception {
         ArbitrageMarketPrice marketPrice = new ArbitrageMarketPrice(0, 0);
         JSONObject jsonObject = HTTPUtil.getJSONfromGet(API_URL + "orderbook/?currency=" + coin.name().toLowerCase());

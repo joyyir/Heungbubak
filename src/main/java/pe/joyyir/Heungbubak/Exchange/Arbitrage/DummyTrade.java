@@ -37,6 +37,11 @@ public class DummyTrade implements ArbitrageExchange {
     }
 
     @Override
+    public double getAvailableBuyQuantity(Coin coin, long krwBalance) throws Exception {
+        return 0;
+    }
+
+    @Override
     public String makeOrder(OrderType orderType, Coin coin, long price, double quantity) throws Exception {
         Random random = new Random();
         int number = random.nextInt(100);
