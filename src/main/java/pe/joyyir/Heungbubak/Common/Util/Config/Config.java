@@ -88,7 +88,14 @@ public class Config {
         Map<Coin, Long> minDiffMap = new HashMap<>();
         while (it.hasNext()) {
             String coinStr = ((String) it.next()).toUpperCase();
-            Coin coin = Coin.valueOf(coinStr);
+            Coin coin;
+            try {
+                coin = Coin.valueOf(coinStr);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
             long diff = minDiff.getLong(coinStr);
             minDiffMap.put(coin, diff);
         }
@@ -96,7 +103,14 @@ public class Config {
         List<Coin> targetCoinArr = new ArrayList<>();
         for(int i = 0; i < targetCoin.length(); i++) {
             String coinStr = targetCoin.getString(i).toUpperCase();
-            Coin coin = Coin.valueOf(coinStr);
+            Coin coin;
+            try {
+                coin = Coin.valueOf(coinStr);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
             targetCoinArr.add(coin);
         }
 

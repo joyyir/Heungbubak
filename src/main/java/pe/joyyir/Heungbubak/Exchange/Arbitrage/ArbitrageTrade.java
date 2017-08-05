@@ -251,7 +251,7 @@ public class ArbitrageTrade implements Runnable {
         try {
             double tradeQuantity;
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
-            PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.SELL : PriceType.BUY;
+            PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.BUY : PriceType.SELL;
             if(orderType == OrderType.BUY) {
                 double afterCoinBalance = exchange.getBalance(coin);
                 tradeQuantity = afterCoinBalance - beforeCoinBalance;

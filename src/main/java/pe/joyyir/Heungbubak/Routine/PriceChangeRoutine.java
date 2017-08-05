@@ -49,17 +49,26 @@ public class PriceChangeRoutine implements Routine {
                 JSONObject obj = prevPrice.getJSONObject(i);
                 String coin = obj.getString("coin");
                 String unit = obj.getString("unit");
+                Coin enumCoin, unitCoin;
+                try {
+                    enumCoin = Coin.valueOf(coin.toUpperCase());
+                    unitCoin = Coin.valueOf(unit.toUpperCase());
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
 
                 if(isCoinonePriceAvail(coin, unit)) {
                     int price = obj.getInt("price");
-                    int coinPrice = coinone.getLastMarketPrice(Coin.valueOf(coin.toUpperCase()));
+                    int coinPrice = coinone.getLastMarketPrice(enumCoin);
                     int percent = (int)(coinPrice / (double)price * 100);
                     sb.append("[" + coin + ": " + coinPrice + " " + unit + " (" + percent + "%)]    ");
                     sbMail.append(coin + ": " + coinPrice + " " + unit + " (" + percent + "%)\n");
                 }
                 else {
                     double price = obj.getDouble("price");
-                    double coinPrice = poloniex.getMarketPrice(Coin.valueOf(unit), Coin.valueOf(coin));
+                    double coinPrice = poloniex.getMarketPrice(unitCoin, enumCoin);
                     int percent = (int)(coinPrice / price * 100);
                     sb.append("[" + coin + ": " + coinPrice + " " + unit + " (" + percent + "%)]    ");
                     sbMail.append(coin + ": " + coinPrice + " " + unit + " (" + percent + "%)\n");

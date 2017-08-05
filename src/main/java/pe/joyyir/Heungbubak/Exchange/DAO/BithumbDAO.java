@@ -85,7 +85,14 @@ public class BithumbDAO {
                 int startIdx = AVAIL_PREFIX.length();
                 int endIdx = key.length();
                 String strCoin = key.substring(startIdx, endIdx).toUpperCase();
-                Coin coin = Coin.valueOf(strCoin);
+                Coin coin;
+                try {
+                    coin = Coin.valueOf(strCoin);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 double balance = data.getDouble(key);
                 vo.getAvailable().put(coin, balance);
             }
@@ -93,7 +100,14 @@ public class BithumbDAO {
                 int startIdx = TOTAL_PREFIX.length();
                 int endIdx = key.length();
                 String strCoin = key.substring(startIdx, endIdx).toUpperCase();
-                Coin coin = Coin.valueOf(strCoin);
+                Coin coin;
+                try {
+                    coin = Coin.valueOf(strCoin);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 double balance = data.getDouble(key);
                 vo.getTotal().put(coin, balance);
             }
@@ -110,7 +124,14 @@ public class BithumbDAO {
         while(keys.hasNext()) {
             String key = (String) keys.next();
             try {
-                Coin coin = Coin.valueOf(key);
+                Coin coin;
+                try {
+                    coin = Coin.valueOf(key);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 ObjectMapper mapper = new ObjectMapper();
                 BasicPriceVO basicVO = mapper.readValue(data.getJSONObject(key).toString(), BasicPriceVO.class);
                 basicVO.setUnit(Coin.KRW);

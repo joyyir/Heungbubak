@@ -43,7 +43,7 @@ public class ArbitrageTradeRoutine implements Routine{
             }
         }
         catch (Exception e) {
-            emailSender.setStringAndReady("ArbitrageTrade", "단순 에러 발생: " + e.getMessage());
+            //emailSender.setStringAndReady("ArbitrageTrade", "단순 에러 발생: " + e.getMessage());
             e.printStackTrace();
         }
     }
