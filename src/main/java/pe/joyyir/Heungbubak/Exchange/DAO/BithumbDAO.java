@@ -123,6 +123,8 @@ public class BithumbDAO {
 
         while(keys.hasNext()) {
             String key = (String) keys.next();
+            if("date".equals(key))
+                continue;
             try {
                 Coin coin;
                 try {

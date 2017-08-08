@@ -11,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) {
         int timeInterval = DEFAULT_TIME_INTERVAL;
-        final String subject = "í¥ë¶€ë°• ì•Œë¦¼";
+        final String subject = "ÈïºÎ¹Ú ¾Ë¸²";
 
         if(args.length > 0)
             timeInterval = Integer.valueOf(args[0]) * 1000;
