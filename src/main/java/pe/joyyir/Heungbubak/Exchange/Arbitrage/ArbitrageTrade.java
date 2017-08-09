@@ -178,7 +178,8 @@ public class ArbitrageTrade implements Runnable {
     private void makeOrder() {
         synchronized (tradeStatus) {
             try {
-                orderId = exchange.makeOrder(orderType, coin, price, quantity);
+                double qty = (orderType == OrderType.SELL) ? (0.999 * quantity) : quantity; // 파는 쪽에서는 수수료 0.1% 만큼 덜 판다.
+                orderId = exchange.makeOrder(orderType, coin, price, qty);
                 setTradeStatus(TradeStatus.ORDER_MADE);
                 log("거래 생성 완료");
             }
