@@ -21,6 +21,7 @@ jar {
     from {
         configurations.compile.collect {it.isDirectory()? it: zipTree(it)}
     }
+    exclude('*.json')
 }
 
 dependencies {

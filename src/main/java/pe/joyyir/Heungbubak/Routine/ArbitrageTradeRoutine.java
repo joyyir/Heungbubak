@@ -47,7 +47,7 @@ public class ArbitrageTradeRoutine implements Routine{
             }
         }
         catch (Exception e) {
-            //emailSender.setStringAndReady("ArbitrageTrade", "´Ü¼ø ¿¡·¯ ¹ß»ı: " + e.getMessage());
+            //emailSender.setStringAndReady("ArbitrageTrade", "ë‹¨ìˆœ ì—ëŸ¬ ë°œìƒ: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -63,7 +63,7 @@ public class ArbitrageTradeRoutine implements Routine{
         long sellPrice = 0, buyPrice = 0;
         sb = new StringBuilder();
 
-        // step 1. ½Ã¼¼ È®ÀÎ
+        // step 1. ì‹œì„¸ í™•ì¸
         long bithumbBuyPrice = bithumb.getMarketPrice(coin, PriceType.BUY);
         long bithumbSellPrice = bithumb.getMarketPrice(coin, PriceType.SELL);
         long coinoneBuyPrice = coinone.getMarketPrice(coin, PriceType.BUY);
@@ -72,50 +72,50 @@ public class ArbitrageTradeRoutine implements Routine{
         if (DEBUG) {
             String debugMsg =
                 "\n--------------------------------------------------\n\n" +
-                coin.name() + "·Î °Å·¡\n\n" +
-                "step 1. ½Ã¼¼ È®ÀÎ\n" +
+                coin.name() + "ë¡œ ê±°ë˜\n\n" +
+                "step 1. ì‹œì„¸ í™•ì¸\n" +
                 String.format("\t[Bithumb] Buy: %d, Sell: %d\n", bithumbBuyPrice, bithumbSellPrice) +
                 String.format("\t[Coinone] Buy: %d, Sell: %d\n", coinoneBuyPrice, coinoneSellPrice) +
-                String.format("\t=> ÇöÀç Â÷ÀÍ: %d\n", Math.max(bithumbBuyPrice - coinoneSellPrice, coinoneBuyPrice - bithumbSellPrice));
+                String.format("\t=> í˜„ì¬ ì°¨ìµ: %d\n", Math.max(bithumbBuyPrice - coinoneSellPrice, coinoneBuyPrice - bithumbSellPrice));
             appendAndPrint(debugMsg);
         }
 
-        // step 2. °Å·¡ Å¸ÀÌ¹ÖÀÎÁö È®ÀÎ
-        if (bithumbBuyPrice - coinoneSellPrice >= minDiff) { // ºø½æ¿¡¼­ ÆÈ°í ÄÚÀÎ¿ø¿¡¼­ »ê´Ù.
+        // step 2. ê±°ë˜ íƒ€ì´ë°ì¸ì§€ í™•ì¸
+        if (bithumbBuyPrice - coinoneSellPrice >= minDiff) { // ë¹—ì¸ì—ì„œ íŒ”ê³  ì½”ì¸ì›ì—ì„œ ì‚°ë‹¤.
             isTiming = true;
             sellExchange = bithumb;
             sellPrice = bithumbBuyPrice;
             buyExchange = coinone;
             buyPrice = coinoneSellPrice;
             if (DEBUG) {
-                sellExchangeName = "ºø½æ";
-                buyExchangeName = "ÄÚÀÎ¿ø";
-                String debugMsg = "\nstep 2. °Å·¡ Å¸ÀÌ¹ÖÀÎÁö È®ÀÎ\n" + "\tºø½æ¿¡¼­ ÆÈ°í ÄÚÀÎ¿ø¿¡¼­ »ê´Ù.\n";
+                sellExchangeName = "ë¹—ì¸";
+                buyExchangeName = "ì½”ì¸ì›";
+                String debugMsg = "\nstep 2. ê±°ë˜ íƒ€ì´ë°ì¸ì§€ í™•ì¸\n" + "\të¹—ì¸ì—ì„œ íŒ”ê³  ì½”ì¸ì›ì—ì„œ ì‚°ë‹¤.\n";
                 appendAndPrint(debugMsg);
             }
-        } else if (coinoneBuyPrice - bithumbSellPrice >= minDiff) { // ÄÚÀÎ¿ø¿¡¼­ ÆÈ°í ºø½æ¿¡¼­ »ê´Ù.
+        } else if (coinoneBuyPrice - bithumbSellPrice >= minDiff) { // ì½”ì¸ì›ì—ì„œ íŒ”ê³  ë¹—ì¸ì—ì„œ ì‚°ë‹¤.
             isTiming = true;
             sellExchange = coinone;
             sellPrice = coinoneBuyPrice;
             buyExchange = bithumb;
             buyPrice = bithumbSellPrice;
             if (DEBUG) {
-                sellExchangeName = "ÄÚÀÎ¿ø";
-                buyExchangeName = "ºø½æ";
-                String debugMsg = "\nstep 2. °Å·¡ Å¸ÀÌ¹ÖÀÎÁö È®ÀÎ\n" + "\tÄÚÀÎ¿ø¿¡¼­ ÆÈ°í ºø½æ¿¡¼­ »ê´Ù.\n";
+                sellExchangeName = "ì½”ì¸ì›";
+                buyExchangeName = "ë¹—ì¸";
+                String debugMsg = "\nstep 2. ê±°ë˜ íƒ€ì´ë°ì¸ì§€ í™•ì¸\n" + "\tì½”ì¸ì›ì—ì„œ íŒ”ê³  ë¹—ì¸ì—ì„œ ì‚°ë‹¤.\n";
                 appendAndPrint(debugMsg);
             }
         }
 
         if (!isTiming) {
             if (DEBUG) {
-                String debugMsg = "\nstep 2. °Å·¡ Å¸ÀÌ¹ÖÀÎÁö È®ÀÎ\n" + "\t°Å·¡ Å¸ÀÌ¹ÖÀÌ ¾Æ´Ï´Ù.\n";
+                String debugMsg = "\nstep 2. ê±°ë˜ íƒ€ì´ë°ì¸ì§€ í™•ì¸\n" + "\tê±°ë˜ íƒ€ì´ë°ì´ ì•„ë‹ˆë‹¤.\n";
                 appendAndPrint(debugMsg);
             }
             return;
         }
 
-        // step 3. °Å·¡ °¡´ÉÇÑ º¸À¯ ¼ö·® È®ÀÎ
+        // step 3. ê±°ë˜ ê°€ëŠ¥í•œ ë³´ìœ  ìˆ˜ëŸ‰ í™•ì¸
         double sellKrwBalance = sellExchange.getBalance(Coin.KRW);
         double sellCoinBalance = sellExchange.getBalance(coin);
 
@@ -131,49 +131,50 @@ public class ArbitrageTradeRoutine implements Routine{
         long expectedProfit = (long) ((sellPrice - buyPrice) * qty);
         if (DEBUG) {
             String debugMsg =
-                "\nstep 3. °Å·¡ °¡´ÉÇÑ º¸À¯ ¼ö·® È®ÀÎ\n" +
-                String.format("\t%s¿¡¼­ %f°³ ÆÇ¸Å °¡´É, %s¿¡¼­ %f°³ ±¸¸Å °¡´É\n", sellExchangeName, sellCoinBalance, buyExchangeName, buyAvailQty) +
-                String.format("\t=> ÃÖ´ë °Å·¡·®: %f°³\n", qty) +
-                String.format("\t=> ¿¹»ó ÀÌÀÍ: %d KRW\n", expectedProfit);
+                "\nstep 3. ê±°ë˜ ê°€ëŠ¥í•œ ë³´ìœ  ìˆ˜ëŸ‰ í™•ì¸\n" +
+                String.format("\t%sì—ì„œ %fê°œ íŒë§¤ ê°€ëŠ¥, %sì—ì„œ %fê°œ êµ¬ë§¤ ê°€ëŠ¥\n", sellExchangeName, sellCoinBalance, buyExchangeName, buyAvailQty) +
+                String.format("\t=> ìµœëŒ€ ê±°ë˜ëŸ‰: %fê°œ\n", qty) +
+                String.format("\t=> ì˜ˆìƒ ì´ìµ: %d KRW\n", expectedProfit);
             appendAndPrint(debugMsg);
         }
 
-        // step 4. ½ÇÁ¦ °Å·¡ °¡°İ »êÁ¤
+        // step 4. ì‹¤ì œ ê±°ë˜ ê°€ê²© ì‚°ì •
         ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
         ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
         long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
-        long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (³»°¡ ÆÈ) ÃÖ¼Ò ÆÇ¸Å°¡ (ÃÖ¾ÇÀÇ Á¶°Ç)
-        long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (³»°¡ »ì) ÃÖ´ë ±¸ÀÔ°¡ (ÃÖ¾ÇÀÇ Á¶°Ç)
-        double realQty = Math.min(sellCoinBalance, buyKrwBalance / realBuyPrice);
+        long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (ë‚´ê°€ íŒ”) ìµœì†Œ íŒë§¤ê°€ (ìµœì•…ì˜ ì¡°ê±´)
+        long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (ë‚´ê°€ ì‚´) ìµœëŒ€ êµ¬ì…ê°€ (ìµœì•…ì˜ ì¡°ê±´)
+        double realBuyQty = Math.min(sellCoinBalance, buyKrwBalance / realBuyPrice);
+        double realSellQty = realBuyQty * 0.999; // ìˆ˜ìˆ˜ë£Œ 0.1% ê³ ë ¤
         long minmaxDiff = realSellPrice - realBuyPrice;
-        long realExpectedProfit = (long) (minmaxDiff * realQty);
+        long realExpectedProfit = (long) (minmaxDiff * realBuyQty);
         if (DEBUG) {
             String debugMsg =
-                "\nstep 4. ½ÇÁ¦ °Å·¡ °¡°İ »êÁ¤\n" +
-                String.format("\t%f°³ °Å·¡½Ã,\n", realQty) +
-                String.format("\t%s¿¡¼­ Æò±Õ°¡ %d, ÃÖÀú°¡ %d¿¡ ÆÇ¸Å\n", sellExchangeName, sellArbitPrice.getAveragePrice(), sellArbitPrice.getMaximinimumPrice()) +
-                String.format("\t%s¿¡¼­ Æò±Õ°¡ %d, ÃÖ°í°¡ %d¿¡ ±¸¸Å\n", buyExchangeName, buyArbitPrice.getAveragePrice(), buyArbitPrice.getMaximinimumPrice()) +
-                String.format("\tÆò±Õ°¡ Â÷ÀÍ: %d, ÃÖÀúÃÖ°í°¡ Â÷ÀÍ: %d\n", avgDiff, minmaxDiff) +
-                String.format("\t=> ¿¹»ó ÀÌÀÍ: %d KRW\n", realExpectedProfit);
+                "\nstep 4. ì‹¤ì œ ê±°ë˜ ê°€ê²© ì‚°ì •\n" +
+                String.format("\t%fê°œ ê±°ë˜ì‹œ,\n", realBuyQty) +
+                String.format("\t%sì—ì„œ í‰ê· ê°€ %d, ìµœì €ê°€ %dì— íŒë§¤\n", sellExchangeName, sellArbitPrice.getAveragePrice(), sellArbitPrice.getMaximinimumPrice()) +
+                String.format("\t%sì—ì„œ í‰ê· ê°€ %d, ìµœê³ ê°€ %dì— êµ¬ë§¤\n", buyExchangeName, buyArbitPrice.getAveragePrice(), buyArbitPrice.getMaximinimumPrice()) +
+                String.format("\tí‰ê· ê°€ ì°¨ìµ: %d, ìµœì €ìµœê³ ê°€ ì°¨ìµ: %d\n", avgDiff, minmaxDiff) +
+                String.format("\t=> ì˜ˆìƒ ì´ìµ: %d KRW\n", realExpectedProfit);
             appendAndPrint(debugMsg);
         }
 
         if (realExpectedProfit < minProfit) {
             if (DEBUG) {
-                appendAndPrint("\t=> ¿¹»ó ÀÌÀÍÀÌ ±âÁØº¸´Ù Àû¾î¼­ °Å·¡ÇÏÁö ¾Ê½À´Ï´Ù.\n");
+                appendAndPrint("\t=> ì˜ˆìƒ ì´ìµì´ ê¸°ì¤€ë³´ë‹¤ ì ì–´ì„œ ê±°ë˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.\n");
             }
             return;
         }
 
         if (true) {
-            //throw new Exception("´ÙÀ½ ÀıÂ÷ºÎÅÍ´Â ½ÇÁ¦·Î °Å·¡°¡ µÇ¹Ç·Î, ÀÌ¸¦ ¸·½À´Ï´Ù.");
+            //throw new Exception("ë‹¤ìŒ ì ˆì°¨ë¶€í„°ëŠ” ì‹¤ì œë¡œ ê±°ë˜ê°€ ë˜ë¯€ë¡œ, ì´ë¥¼ ë§‰ìŠµë‹ˆë‹¤.");
         }
 
-        // step 5. °Å·¡ ÁøÇà
-        appendAndPrint("\nstep 5. °Å·¡ ÁøÇà\n");
+        // step 5. ê±°ë˜ ì§„í–‰
+        appendAndPrint("\nstep 5. ê±°ë˜ ì§„í–‰\n");
         emailSender.setReady(true);
-        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realQty, sellKrwBalance, sellCoinBalance);
-        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realQty, buyKrwBalance, buyCoinBalance);
+        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realSellQty, sellKrwBalance, sellCoinBalance);
+        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realBuyQty, buyKrwBalance, buyCoinBalance);
         sellTrade.setEmailStringBuilder(sb);
         buyTrade.setEmailStringBuilder(sb);
         sellTrade.setOppositeTrade(buyTrade);
@@ -188,29 +189,29 @@ public class ArbitrageTradeRoutine implements Routine{
             appendAndPrint("join exception");
         }
 
-        // step 6. °Å·¡ °á°ú
-        appendAndPrint("\nstep 6. °Å·¡ °á°ú\n");
+        // step 6. ê±°ë˜ ê²°ê³¼
+        appendAndPrint("\nstep 6. ê±°ë˜ ê²°ê³¼\n");
         if(sellTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED
                 && buyTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED) {
-            // °Å·¡ ¼º°ø
-            appendAndPrint("\t°Å·¡ ¼º°ø!!!\n");
-            appendAndPrint("\tÆÇ¸Å °á°ú: " + sellExchange.getOrderInfo(sellTrade.getOrderId(), coin, OrderType.SELL).toString() + "\n");
-            appendAndPrint("\t±¸¸Å °á°ú: " + buyExchange.getOrderInfo(buyTrade.getOrderId(), coin, OrderType.BUY).toString() + "\n");
+            // ê±°ë˜ ì„±ê³µ
+            appendAndPrint("\tê±°ë˜ ì„±ê³µ!!!\n");
+            appendAndPrint("\tíŒë§¤ ê²°ê³¼: " + sellExchange.getOrderInfo(sellTrade.getOrderId(), coin, OrderType.SELL).toString() + "\n");
+            appendAndPrint("\têµ¬ë§¤ ê²°ê³¼: " + buyExchange.getOrderInfo(buyTrade.getOrderId(), coin, OrderType.BUY).toString() + "\n");
         }
         else {
-            // °Å·¡ ½ÇÆĞ
-            appendAndPrint("\t°Å·¡ ½ÇÆĞ!!!\n");
+            // ê±°ë˜ ì‹¤íŒ¨
+            appendAndPrint("\tê±°ë˜ ì‹¤íŒ¨!!!\n");
         }
 
-        double sellKrwBalance2 = sellExchange.getBalance(Coin.KRW); // Áõ°¡
-        double sellCoinQty2 = sellExchange.getBalance(coin); // °¨¼Ò
-        double buyKrwBalance2 = buyExchange.getBalance(Coin.KRW); // °¨¼Ò
-        double buyCoinQty2 = buyExchange.getBalance(coin); // Áõ°¡
+        double sellKrwBalance2 = sellExchange.getBalance(Coin.KRW); // ì¦ê°€
+        double sellCoinQty2 = sellExchange.getBalance(coin); // ê°ì†Œ
+        double buyKrwBalance2 = buyExchange.getBalance(Coin.KRW); // ê°ì†Œ
+        double buyCoinQty2 = buyExchange.getBalance(coin); // ì¦ê°€
         double krwSum2 = sellKrwBalance2 + buyKrwBalance2;
         double coinSum2 = sellCoinQty2 + buyCoinQty2;
 
-        // sellExchange¿¡¼­ ÄÚÀÎin, µ·out
-        // buyExchange¿¡¼­ ÄÚÀÎout, µ·in
+        // sellExchangeì—ì„œ ì½”ì¸in, ëˆout
+        // buyExchangeì—ì„œ ì½”ì¸out, ëˆin
         String debugMsg = String.format("\t[SELL] %s: %+.0f KRW, %+.4f %s\n\t[BUY] %s: %+.0f KRW, %+.4f %s\n", sellExchangeName, sellKrwBalance2-sellKrwBalance, sellCoinQty2-sellCoinBalance, coin.name(), buyExchangeName, buyKrwBalance2-buyKrwBalance, buyCoinQty2-buyCoinBalance, coin.name());
         debugMsg += String.format("\tTotal: %.0f KRW (%+.0f), %.4f %s (%+.4f)\n", krwSum2, krwSum2-krwSum, coinSum2, coin.name(), coinSum2-coinSum);
         appendAndPrint(debugMsg);
