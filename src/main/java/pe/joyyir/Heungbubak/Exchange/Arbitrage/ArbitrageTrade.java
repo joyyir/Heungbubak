@@ -122,7 +122,6 @@ public class ArbitrageTrade implements Runnable {
             }
             catch (Exception e2) {
                 log(e2.getMessage());
-                setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
                 log("종료");
                 return;
             }
@@ -136,7 +135,7 @@ public class ArbitrageTrade implements Runnable {
                     log("상대방 거래가 끝날 때까지 대기");
                     oppositeTrade.wait();
                     log("대기 상태 풀림");
-                    if(tradeStatus != TradeStatus.ORDER_CANCELED && tradeStatus != TradeStatus.ORDER_CANCEL_FAILED && isCancelRequired()) {
+                    if(tradeStatus == TradeStatus.ORDER_COMPLETED && isCancelRequired()) {
                         log("거래 취소가 요청되어 역거래를 진행합니다.");
                         try {
                             tryReverseOrder();
@@ -205,7 +204,7 @@ public class ArbitrageTrade implements Runnable {
                 if (exchange.isOrderCompleted(orderId, orderType, coin)) {
                     if(isSync)
                         setTradeStatus(TradeStatus.ORDER_COMPLETED);
-                    log("거래 성사 완료");
+                    log("거래 성공");
                     isSuccess = true;
                     break;
                 }
@@ -236,6 +235,15 @@ public class ArbitrageTrade implements Runnable {
                     Thread.sleep(TRIAL_TIME_INTERVAL);
                 }
                 if(!isSuccess) {
+                    // 한번 더 거래 성사 확인
+                    boolean isCompleted = exchange.isOrderCompleted(orderId, orderType, coin);
+                    if(isCompleted) {
+                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                        finalException = new Exception("그 사이에 거래가 성사됨");
+                    }
+                    else {
+                        setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
+                    }
                     throw new Exception("취소 실패 " + ((finalException == null) ? "" : finalException));
                 }
             }
