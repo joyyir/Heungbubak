@@ -138,22 +138,7 @@ public class ArbitrageTradeRoutine implements Routine{
             appendAndPrint(debugMsg);
         }
 
-        /*
-        // step 4. 거래 승인
-        System.out.printf("\nstep 4. 거래 승인\n");
-        System.out.printf("\t거래를 진행하려 합니다. 동의하십니까? (y/n) : ");
-        Scanner sc = new Scanner(System.in);
-        String userInput = sc.nextLine();
-        if(!userInput.toUpperCase().equals("Y")) {
-            System.out.printf("\t거래를 취소합니다.\n");
-            return;
-        }
-        else {
-            System.out.printf("\t거래를 진행합니다.\n");
-        }
-        */
-
-        // step 5. 실제 거래 가격 산정
+        // step 4. 실제 거래 가격 산정
         ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
         ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
         long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
@@ -164,7 +149,7 @@ public class ArbitrageTradeRoutine implements Routine{
         long realExpectedProfit = (long) (minmaxDiff * realQty);
         if (DEBUG) {
             String debugMsg =
-                "\nstep 5. 실제 거래 가격 산정\n" +
+                "\nstep 4. 실제 거래 가격 산정\n" +
                 String.format("\t%f개 거래시,\n", realQty) +
                 String.format("\t%s에서 평균가 %d, 최저가 %d에 판매\n", sellExchangeName, sellArbitPrice.getAveragePrice(), sellArbitPrice.getMaximinimumPrice()) +
                 String.format("\t%s에서 평균가 %d, 최고가 %d에 구매\n", buyExchangeName, buyArbitPrice.getAveragePrice(), buyArbitPrice.getMaximinimumPrice()) +
@@ -184,8 +169,8 @@ public class ArbitrageTradeRoutine implements Routine{
             //throw new Exception("다음 절차부터는 실제로 거래가 되므로, 이를 막습니다.");
         }
 
-        // step 6. 거래 진행
-        appendAndPrint("\nstep 6. 거래 진행\n");
+        // step 5. 거래 진행
+        appendAndPrint("\nstep 5. 거래 진행\n");
         emailSender.setReady(true);
         ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realQty, sellKrwBalance, sellCoinBalance);
         ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realQty, buyKrwBalance, buyCoinBalance);
@@ -203,6 +188,8 @@ public class ArbitrageTradeRoutine implements Routine{
             appendAndPrint("join exception");
         }
 
+        // step 6. 거래 결과
+        appendAndPrint("\nstep 6. 거래 결과\n");
         if(sellTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED
                 && buyTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED) {
             // 거래 성공
