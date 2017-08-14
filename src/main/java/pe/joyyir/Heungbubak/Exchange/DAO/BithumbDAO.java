@@ -9,8 +9,8 @@ import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Common.Util.Encryptor;
 import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
 import pe.joyyir.Heungbubak.Exchange.ApiKey.BithumbApiKey;
+import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO_Old;
 import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO;
-import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO_V2;
 import pe.joyyir.Heungbubak.Exchange.Domain.BasicPriceVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.CoinPriceVO;
 
@@ -52,7 +52,7 @@ public class BithumbDAO {
     }
 
     @Deprecated
-    public BalanceVO getBalanceVO() throws Exception {
+    public BalanceVO_Old getBalanceVO_Old() throws Exception {
         String endpoint = "info/balance";
         Map<String, String> params = new HashMap<>();
         //params.put("order_currency", coin.name().toUpperCase());
@@ -62,10 +62,10 @@ public class BithumbDAO {
         JSONObject result = callApi(endpoint, params);
 
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(result.getJSONObject("data").toString(), BalanceVO.class);
+        return mapper.readValue(result.getJSONObject("data").toString(), BalanceVO_Old.class);
     }
 
-    public BalanceVO_V2 getBalanceVO_V2() throws Exception {
+    public BalanceVO getBalanceVO() throws Exception {
         final String endpoint = "info/balance";
         final String TOTAL_PREFIX = "total_";
         final String AVAIL_PREFIX = "available_";
@@ -76,7 +76,7 @@ public class BithumbDAO {
         params.put("endpoint", '/' + endpoint);
         JSONObject result = callApi(endpoint, params);
 
-        BalanceVO_V2 vo = new BalanceVO_V2();
+        BalanceVO vo = new BalanceVO();
         JSONObject data = result.getJSONObject("data");
         Iterator<?> iterator = data.keys();
         while(iterator.hasNext()) {
@@ -150,7 +150,7 @@ public class BithumbDAO {
     public static void main(String[] args) {
         try {
             BithumbDAO dao = new BithumbDAO();
-            dao.getBalanceVO_V2();
+            dao.getBalanceVO();
         }
         catch (Exception e) {
             e.printStackTrace();

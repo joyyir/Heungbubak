@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 import pe.joyyir.Heungbubak.Exchange.DAO.BithumbDAO;
-import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO_V2;
+import pe.joyyir.Heungbubak.Exchange.Domain.BalanceVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BasicPriceVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.CoinPriceVO;
 
@@ -178,7 +178,7 @@ public class BithumbService implements ArbitrageExchange {
 
     public long getCompleteBalance() throws Exception {
         BithumbDAO dao = new BithumbDAO();
-        BalanceVO_V2 balanceVO = dao.getBalanceVO_V2();
+        BalanceVO balanceVO = dao.getBalanceVO();
         CoinPriceVO priceVO = dao.getCoinPriceVO();
         double sum = 0.0;
 
@@ -195,7 +195,7 @@ public class BithumbService implements ArbitrageExchange {
     @Override
     public double getBalance(Coin coin) throws Exception {
         BithumbDAO dao = new BithumbDAO();
-        BalanceVO_V2 vo = dao.getBalanceVO_V2();
+        BalanceVO vo = dao.getBalanceVO();
         return vo.getAvailable().get(coin);
     }
 
