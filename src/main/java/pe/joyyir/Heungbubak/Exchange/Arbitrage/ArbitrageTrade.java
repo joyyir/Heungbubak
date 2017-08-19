@@ -236,14 +236,10 @@ public class ArbitrageTrade implements Runnable {
                 }
                 if(!isSuccess) {
                     // 한번 더 거래 성사 확인
-                    boolean isCompleted = exchange.isOrderCompleted(orderId, orderType, coin);
-                    if(isCompleted) {
-                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                    if(exchange.isOrderCompleted(orderId, orderType, coin)) {
                         finalException = new Exception("그 사이에 거래가 성사됨");
                     }
-                    else {
-                        setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
-                    }
+                    setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
                     throw new Exception("취소 실패 " + ((finalException == null) ? "" : finalException));
                 }
             }
