@@ -6,10 +6,7 @@ import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
 import pe.joyyir.Heungbubak.Common.Util.EmailSender;
-import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageExchange;
-import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageMarketPrice;
-import pe.joyyir.Heungbubak.Exchange.Arbitrage.ArbitrageTrade;
-import pe.joyyir.Heungbubak.Exchange.Arbitrage.DummyTrade;
+import pe.joyyir.Heungbubak.Exchange.Arbitrage.*;
 import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
 import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
 
@@ -238,15 +235,31 @@ public class ArbitrageTradeRoutine implements Routine{
         }
     }
 
+    private void testTradeV2() {
+        ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50);
+        ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50);
+        sellTrade.setOppositeTrade(buyTrade);
+        buyTrade.setOppositeTrade(sellTrade);
+        sellTrade.start();
+        buyTrade.start();
+        try {
+            sellTrade.getThread().join();
+            buyTrade.getThread().join();
+        }
+        catch (Exception e) {
+            System.out.println("join exception");
+        }
+    }
+
     public static void main(String[] args) {
         try {
             ArbitrageTradeRoutine arbitrage = new ArbitrageTradeRoutine(null);
-            while(true) {
+            if(true) {
                 try {
-                    Thread.sleep(5000);
+                    //Thread.sleep(5000);
                     //if (arbitrage.makeMoney())
                     //    break;
-                    arbitrage.testTrade();
+                    arbitrage.testTradeV2();
                     System.out.println("\n------------------------------------------------------------\n");
                 }
                 catch (Exception e) {
