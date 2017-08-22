@@ -170,8 +170,9 @@ public class ArbitrageTradeRoutine implements Routine{
         // step 5. 거래 진행
         appendAndPrint("\nstep 5. 거래 진행\n");
         emailSender.setReady(true);
-        ArbitrageTrade sellTrade = new ArbitrageTrade(sellExchange, OrderType.SELL, coin, realSellPrice, realSellQty, sellKrwBalance, sellCoinBalance);
-        ArbitrageTrade buyTrade = new ArbitrageTrade(buyExchange, OrderType.BUY, coin, realBuyPrice, realBuyQty, buyKrwBalance, buyCoinBalance);
+        ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
+        ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(sellExchange, OrderType.SELL, coin, realSellPrice, realSellQty, sellKrwBalance, sellCoinBalance, sharedResource);
+        ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(buyExchange, OrderType.BUY, coin, realBuyPrice, realBuyQty, buyKrwBalance, buyCoinBalance, sharedResource);
         sellTrade.setEmailStringBuilder(sb);
         buyTrade.setEmailStringBuilder(sb);
         sellTrade.setOppositeTrade(buyTrade);
@@ -188,8 +189,8 @@ public class ArbitrageTradeRoutine implements Routine{
 
         // step 6. 거래 결과
         appendAndPrint("\nstep 6. 거래 결과\n");
-        if(sellTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED
-                && buyTrade.getTradeStatus() == ArbitrageTrade.TradeStatus.ORDER_COMPLETED) {
+        if(sellTrade.getTradeStatus() == ArbitrageTradeV2.TradeStatus.ORDER_COMPLETED
+                && buyTrade.getTradeStatus() == ArbitrageTradeV2.TradeStatus.ORDER_COMPLETED) {
             // 거래 성공
             appendAndPrint("\t거래 성공!!!\n");
             appendAndPrint("\t판매 결과: " + sellExchange.getOrderInfo(sellTrade.getOrderId(), coin, OrderType.SELL).toString() + "\n");
@@ -236,8 +237,9 @@ public class ArbitrageTradeRoutine implements Routine{
     }
 
     private void testTradeV2() {
-        ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50);
-        ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50);
+        ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
+        ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50, sharedResource);
+        ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50, sharedResource);
         sellTrade.setOppositeTrade(buyTrade);
         buyTrade.setOppositeTrade(sellTrade);
         sellTrade.start();

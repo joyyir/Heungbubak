@@ -1,6 +1,5 @@
 package pe.joyyir.Heungbubak.Exchange.Arbitrage;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import pe.joyyir.Heungbubak.Common.Const.Coin;
@@ -41,14 +40,33 @@ public class ArbitrageTradeV2 implements Runnable {
     @Setter
     private StringBuilder emailStringBuilder = null;
 
+    // 동시성 제어
+    private ArbitrageSharedResource sharedResource;
+    private ArbitrageSharedResource.SharedResource myResource;
+
+    // Custom setter & getter - start
     public void setTradeStatus(TradeStatus status) {
         synchronized (sharedResource) {
-            sharedResource.tradeStatus = status;
+            myResource.tradeStatus = status;
             sharedResource.notify();
-            if(sharedResource.tradeStatus != null) {
+            if(getTradeStatus() != null) {
                 //log("notify");
             }
         }
+    }
+
+    public TradeStatus getTradeStatus() {
+        return myResource.tradeStatus;
+    }
+
+    public Boolean isCancelRequired() {
+        synchronized (sharedResource) {
+            return myResource.isCancelRequired;
+        }
+    }
+
+    public void setCancelRequried(boolean cancelRequried) {
+        myResource.isCancelRequired = cancelRequried;
     }
 
     public void setIsCancelRequired(boolean cancelRequired, String cause) {
@@ -57,15 +75,16 @@ public class ArbitrageTradeV2 implements Runnable {
             if (cancelRequired) {
                 //log("거래 취소가 요청됨 (원인: " + cause + ")");
             }
-            sharedResource.isCancelRequired = cancelRequired;
+            setCancelRequried(cancelRequired);
         }
     }
 
-    public Boolean isCancelRequired() {
-        synchronized (sharedResource) {
-            return sharedResource.isCancelRequired;
-        }
+    boolean isTradeCompleted(TradeStatus tradeStatus) {
+        return  tradeStatus == TradeStatus.ORDER_COMPLETED ||
+                tradeStatus == TradeStatus.ORDER_CANCELED ||
+                tradeStatus == TradeStatus.ORDER_CANCEL_FAILED;
     }
+    // Custom setter & getter - end
 
     private void log(String str) {
         String indention = orderType == OrderType.SELL ? " " : "\t\t\t\t\t\t\t\t\t\t\t\t\t";
@@ -76,7 +95,8 @@ public class ArbitrageTradeV2 implements Runnable {
         System.out.printf(logStr);
     }
 
-    public ArbitrageTradeV2(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity, double beforeKrwBal, double beforeCoinBal) {
+    // Constructor
+    public ArbitrageTradeV2(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity, double beforeKrwBal, double beforeCoinBal, ArbitrageSharedResource sharedResource) {
         this.orderType = orderType;
         this.exchange = exchange;
         this.coin = coin;
@@ -87,17 +107,68 @@ public class ArbitrageTradeV2 implements Runnable {
         this.thread = new Thread(this);
         this.beforeCoinBalance = beforeCoinBal;
         this.beforeKrwBalance = beforeKrwBal;
-        this.sharedResource = new SharedResource(TradeStatus.START, false);
+        this.sharedResource = sharedResource;
+        this.sharedResource.setResource(orderType, TradeStatus.START, false);
+        this.myResource = sharedResource.getResource(orderType);
     }
 
-    public void start() {
-        thread.start();
+    // Trade - start
+    private void makeOrder() throws Exception {
+        synchronized (sharedResource) {
+            try {
+                orderId = exchange.makeOrder(orderType, coin, price, quantity);
+                setTradeStatus(TradeStatus.ORDER_MADE);
+                log("거래 생성 완료");
+            }
+            catch (Exception e) {
+                throw new Exception("거래 생성 실패 " + e);
+            }
+        }
     }
 
-    boolean isTradeCompleted(TradeStatus tradeStatus) {
-        return  tradeStatus == TradeStatus.ORDER_COMPLETED ||
-                tradeStatus == TradeStatus.ORDER_CANCELED ||
-                tradeStatus == TradeStatus.ORDER_CANCEL_FAILED;
+    private void waitOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
+        boolean isSuccess = false;
+        Exception finalException = null;
+
+        for (int trial = 0; trial < TRIAL; trial++) {
+            synchronized (sharedResource) {
+                try {
+                    if (exchange.isOrderCompleted(orderId, orderType, coin)) {
+                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                        log("거래 성공");
+                        isSuccess = true;
+                        break;
+                    }
+                    Thread.sleep(TRIAL_TIME_INTERVAL);
+                } catch (Exception e) {
+                    finalException = e;
+                }
+            }
+        }
+
+        if (!isSuccess) {
+            throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + ((finalException == null) ? "" : finalException));
+        }
+    }
+
+    private void tryReverseOrder() throws Exception{
+        try {
+            double tradeQuantity;
+            OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
+            PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.BUY : PriceType.SELL;
+            if (orderType == OrderType.BUY) {
+                double afterCoinBalance = exchange.getBalance(coin);
+                tradeQuantity = afterCoinBalance - beforeCoinBalance;
+            } else { // OrderType.SELL
+                double afterKrwBalance = exchange.getBalance(Coin.KRW);
+                tradeQuantity = exchange.getAvailableBuyQuantity(coin, (long) (afterKrwBalance - beforeKrwBalance));
+            }
+            ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, tradeQuantity);
+            String orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), tradeQuantity);
+            waitOrderCompleted(orderId, reversedOrderType, coin);
+        } catch (Exception e) {
+            throw new Exception("역거래 실패... " + e);
+        }
     }
 
     private void reverseOrder() {
@@ -130,132 +201,9 @@ public class ArbitrageTradeV2 implements Runnable {
         }
     }
 
-    private void makeOrder() throws Exception {
-        synchronized (sharedResource) {
-            try {
-                orderId = exchange.makeOrder(orderType, coin, price, quantity);
-                setTradeStatus(TradeStatus.ORDER_MADE);
-                log("거래 생성 완료");
-            }
-            catch (Exception e) {
-                throw new Exception("거래 생성 실패 " + e);
-            }
-        }
-    }
-
-    private void waitOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
-        boolean isSuccess = false;
-        Exception finalException = null;
-
-        synchronized (sharedResource) {
-            for (int trial = 0; trial < TRIAL; trial++) {
-                try {
-                    if (exchange.isOrderCompleted(orderId, orderType, coin)) {
-                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
-                        log("거래 성공");
-                        isSuccess = true;
-                        break;
-                    }
-                    Thread.sleep(TRIAL_TIME_INTERVAL);
-                } catch (Exception e) {
-                    finalException = e;
-                }
-            }
-
-            if (!isSuccess) {
-                throw new Exception("거래가 제한 시간 내에 성사되지 않았습니다. " + ((finalException == null) ? "" : finalException));
-            }
-        }
-    }
-
-    private void tryReverseOrder() throws Exception{
-        try {
-            double tradeQuantity;
-            OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
-            PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.BUY : PriceType.SELL;
-            if (orderType == OrderType.BUY) {
-                double afterCoinBalance = exchange.getBalance(coin);
-                tradeQuantity = afterCoinBalance - beforeCoinBalance;
-            } else { // OrderType.SELL
-                double afterKrwBalance = exchange.getBalance(Coin.KRW);
-                tradeQuantity = exchange.getAvailableBuyQuantity(coin, (long) (afterKrwBalance - beforeKrwBalance));
-            }
-            ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, tradeQuantity);
-            String orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), tradeQuantity);
-            waitOrderCompleted(orderId, reversedOrderType, coin);
-        } catch (Exception e) {
-            throw new Exception("역거래 실패... " + e);
-        }
-    }
-
-    @Data
-    private class SharedResource {
-        private TradeStatus tradeStatus;
-        private Boolean isCancelRequired;
-
-        public SharedResource(TradeStatus tradeStatus, Boolean isCancelRequired) {
-            this.tradeStatus = tradeStatus;
-            this.isCancelRequired = isCancelRequired;
-        }
-    }
-    private SharedResource sharedResource;
-
-    @Override
-    public void run() {
-        // TradeStatus.START
-        if(isCancelRequired()) {
-            cancelTrade();
-            return;
-        }
-        try {
-            makeOrder();
-        }
-        catch (Exception e) {
-            log(e.getMessage());
-            cancelTrade();
-            return;
-        }
-
-        // TradeStatus.ORDER_MADE
-        if(isCancelRequired()) {
-            cancelTrade();
-            return;
-        }
-        try {
-            waitOrderCompleted(orderId, orderType, coin);
-        }
-        catch (Exception e) {
-            log(e.getMessage());
-            cancelTrade();
-            return;
-        }
-
-        // TradeStatus.ORDER_COMPLETED
-        if(isCancelRequired()) {
-            cancelTrade();
-            return;
-        }
-        synchronized (oppositeTrade.sharedResource) {
-            while(!isTradeCompleted(oppositeTrade.sharedResource.tradeStatus)) {
-                try {
-                    log("상대방 거래가 끝날 때까지 대기");
-                    oppositeTrade.sharedResource.wait();
-                    log("대기 상태 풀림");
-                }
-                catch (Exception e) { }
-            }
-        }
-        if(isCancelRequired()) {
-            cancelTrade();
-            return;
-        }
-        log("종료");
-    }
-
-    // 교착상태가 발생할 가능성이 있는 함수
     private void cancelTrade() {
         synchronized (sharedResource) {
-            switch (sharedResource.tradeStatus) {
+            switch (getTradeStatus()) {
                 case START: // 거래 생성 실패
                     setTradeStatus(TradeStatus.ORDER_CANCELED);
                     oppositeTrade.setIsCancelRequired(true, "상대방의 거래 생성 실패");
@@ -283,7 +231,7 @@ public class ArbitrageTradeV2 implements Runnable {
                     }
                     break;
                 default:
-                    log("nothing to do: " + sharedResource.tradeStatus.name());
+                    log("nothing to do: " + getTradeStatus().name());
                     break;
             }
         }
@@ -320,4 +268,64 @@ public class ArbitrageTradeV2 implements Runnable {
             throw new Exception("거래 취소 실패 " + ((finalException == null) ? "" : finalException));
         }
     }
+    // Trade - end
+
+
+    // Thread - start
+    public void start() {
+        thread.start();
+    }
+
+    @Override
+    public void run() {
+        // TradeStatus.START
+        if(isCancelRequired()) {
+            cancelTrade();
+            return;
+        }
+        try {
+            makeOrder();
+        }
+        catch (Exception e) {
+            log(e.getMessage());
+            cancelTrade();
+            return;
+        }
+
+        // TradeStatus.ORDER_MADE
+        if(isCancelRequired()) {
+            cancelTrade();
+            return;
+        }
+        try {
+            waitOrderCompleted(orderId, orderType, coin);
+        }
+        catch (Exception e) {
+            log(e.getMessage());
+            cancelTrade();
+            return;
+        }
+
+        // TradeStatus.ORDER_COMPLETED
+        if(isCancelRequired()) {
+            cancelTrade();
+            return;
+        }
+        synchronized (sharedResource) {
+            while(!isTradeCompleted(oppositeTrade.getTradeStatus())) {
+                try {
+                    log("상대방 거래가 끝날 때까지 대기");
+                    sharedResource.wait();
+                    log("대기 상태 풀림");
+                }
+                catch (Exception e) { }
+            }
+        }
+        if(isCancelRequired()) {
+            cancelTrade();
+            return;
+        }
+        log("종료");
+    }
+    // Thread - end
 }
