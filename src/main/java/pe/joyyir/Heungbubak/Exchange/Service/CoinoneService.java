@@ -105,10 +105,6 @@ public class CoinoneService implements ArbitrageExchange {
 
     @Override
     public double getBalance(Coin coin) throws Exception {
-        if(coin == Coin.XRP) {
-            return 3000.0; // TODO : HARDCODED
-        }
-
         long nonce = CmnUtil.nsTime();
         String url = API_URL + BALANCE_URL;
 
@@ -279,45 +275,5 @@ public class CoinoneService implements ArbitrageExchange {
     private void errorCheck(JSONObject result) throws Exception {
         if(!"success".equals(result.getString("result")))
             throw new Exception(errorDescription(result.getString("errorCode")));
-    }
-
-    public static void main(String[] args) {
-        try {
-            CoinoneService comm = new CoinoneService();
-            /*
-            int authNumber;
-            comm.twoFactorAuth(CoinoneService.Coin.BTC);
-            System.out.print("Coinone OTP ��ȣ�� �Է��ϼ��� : ");
-            Scanner sc = new Scanner(System.in);
-            authNumber = sc.nextInt();
-            comm.sendBTC("1AKnnChADG5svVrNbAGnF4xdNdZ515J4oM", 0.001, authNumber, "trade", "1GdHw2mKCH6scrYvpR6NFikJqthyn6ee59");
-            */
-
-            String orderId = comm.makeOrder(OrderType.SELL, Coin.ETC, 1000000, 0.0115);
-            System.out.println(comm.isOrderCompleted(orderId, OrderType.SELL, Coin.ETC));
-            comm.cancelOrder(orderId, OrderType.SELL, Coin.ETC, 1000000, 0.0115);
-
-            Thread.sleep(1000);
-
-            String orderId2 = comm.makeOrder(OrderType.BUY, Coin.ETC, 10000, 0.01);
-            System.out.println(comm.isOrderCompleted(orderId2, OrderType.BUY, Coin.ETC));
-            comm.cancelOrder(orderId2, OrderType.BUY, Coin.ETC, 10000, 0.01);
-
-            //comm.getMarketPrice(Coin.BTC, PriceType.BUY);
-
-            /*
-            System.out.println("1�� �춧: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 1.0));
-            System.out.println("10�� �춧: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10.0));
-            System.out.println("10000�� �춧: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.BUY, 10000.0));
-            System.out.println("1�� �ȶ�: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 1.0));
-            System.out.println("10�� �ȶ�: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10.0));
-            System.out.println("10000�� �ȶ�: " + comm.getAverageMarketPrice(Coin.BTC, PriceType.SELL, 10000.0));
-            */
-            comm.getCompleteBalance();
-            //comm.getBalance(Coin.XRP);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
     }
 }

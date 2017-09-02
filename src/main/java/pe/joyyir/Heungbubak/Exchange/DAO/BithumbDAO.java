@@ -90,7 +90,7 @@ public class BithumbDAO {
                     coin = Coin.valueOf(strCoin);
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.out);
                     continue;
                 }
                 double balance = data.getDouble(key);
@@ -105,7 +105,7 @@ public class BithumbDAO {
                     coin = Coin.valueOf(strCoin);
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.out);
                     continue;
                 }
                 double balance = data.getDouble(key);
