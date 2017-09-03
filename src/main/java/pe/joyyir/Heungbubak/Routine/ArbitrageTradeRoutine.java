@@ -142,7 +142,7 @@ public class ArbitrageTradeRoutine implements Routine{
         long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (내가 팔) 최소 판매가 (최악의 조건)
         long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (내가 살) 최대 구입가 (최악의 조건)
         double realBuyQty = Math.min(sellCoinBalance, buyKrwBalance / realBuyPrice);
-        double realSellQty = realBuyQty * 0.999; // 수수료 0.1% 고려
+        double realSellQty = realBuyQty * 0.9985; // 수수료 고려 (0.15%)
         long minmaxDiff = realSellPrice - realBuyPrice;
         long realExpectedProfit = (long) (minmaxDiff * realBuyQty);
         if (DEBUG) {
