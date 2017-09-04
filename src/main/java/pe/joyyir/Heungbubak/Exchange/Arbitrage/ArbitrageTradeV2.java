@@ -6,12 +6,13 @@ import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
+import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
 
 import java.util.Date;
 
 public class ArbitrageTradeV2 implements Runnable {
     // parameters
-    final int TRIAL = 10;
     final int TRIAL_TIME_INTERVAL = 1000;
 
     public enum TradeStatus {
@@ -43,6 +44,9 @@ public class ArbitrageTradeV2 implements Runnable {
     // 동시성 제어
     private ArbitrageSharedResource sharedResource;
     private ArbitrageSharedResource.SharedResource myResource;
+
+    private long maxLoss;
+    private long maxWaitingSec;
 
     // Custom setter & getter - start
     public void setTradeStatus(TradeStatus status) {
@@ -110,6 +114,10 @@ public class ArbitrageTradeV2 implements Runnable {
         this.sharedResource = sharedResource;
         this.sharedResource.setResource(orderType, TradeStatus.START, false);
         this.myResource = sharedResource.getResource(orderType);
+
+        ArbitrageConfigVO configVo = Config.getArbitrageConfig();
+        this.maxLoss = configVo.getMaxLoss();
+        this.maxWaitingSec = configVo.getMaxWaitingSec();
     }
 
     // Trade - start
@@ -130,7 +138,7 @@ public class ArbitrageTradeV2 implements Runnable {
         boolean isSuccess = false;
         Exception finalException = null;
 
-        for (int trial = 0; trial < TRIAL; trial++) {
+        for (int trial = 0; trial < maxWaitingSec; trial++) {
             synchronized (sharedResource) {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
@@ -164,40 +172,41 @@ public class ArbitrageTradeV2 implements Runnable {
                 tradeQuantity = exchange.getAvailableBuyQuantity(coin, (long) (afterKrwBalance - beforeKrwBalance));
             }
             ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, tradeQuantity);
-            String orderId = exchange.makeOrder(reversedOrderType, coin, marketPrice.getMaximinimumPrice(), tradeQuantity);
+            long currentPrice = marketPrice.getMaximinimumPrice();
+            double loss = (price-currentPrice) * tradeQuantity * (orderType == OrderType.BUY ? 1 : -1);
+            if (loss > maxLoss) {
+                throw new Exception("예상 손실액이 최대 손실 기준액을 넘었습니다. 역거래를 진행하지 않았습니다. (예상 손실액: " + loss + ")");
+            }
+            String orderId = exchange.makeOrder(reversedOrderType, coin, currentPrice, tradeQuantity);
             waitOrderCompleted(orderId, reversedOrderType, coin);
         } catch (Exception e) {
             throw new Exception("역거래 실패... " + e);
         }
     }
 
-    private void reverseOrder() {
+    private void reverseOrder() throws Exception {
         log("거래 취소가 요청되어 역거래를 진행합니다.");
+        tryReverseOrder();
+        log("역거래 성공!!!");
 
-        try {
-            tryReverseOrder();
-            log("역거래 성공!!!");
-            Coin reverseCoin;
-            double diff;
-            if (orderType == OrderType.BUY) {
-                double afterKrwBalance = exchange.getBalance(Coin.KRW);
-                diff = afterKrwBalance - beforeKrwBalance;
-                reverseCoin = Coin.KRW;
-            } else { // OrderType.SELL
-                double afterCoinBalance = exchange.getBalance(coin);
-                diff = afterCoinBalance - beforeCoinBalance;
-                reverseCoin = coin;
-            }
+        Coin reverseCoin;
+        double diff;
+        if (orderType == OrderType.BUY) {
+            double afterKrwBalance = exchange.getBalance(Coin.KRW);
+            diff = afterKrwBalance - beforeKrwBalance;
+            reverseCoin = Coin.KRW;
+        } else { // OrderType.SELL
+            double afterCoinBalance = exchange.getBalance(coin);
+            diff = afterCoinBalance - beforeCoinBalance;
+            reverseCoin = coin;
+        }
 
-            if (diff > 0) {
-                String logStr = String.format("다행히 이득이다! %+.0f %s", diff, reverseCoin.name());
-                log(logStr);
-            } else {
-                String logStr = String.format("아쉽게도 손해다... %+.0f %s", diff, reverseCoin.name());
-                log(logStr);
-            }
-        } catch (Exception e) {
-            log(e.getMessage());
+        if (diff > 0) {
+            String logStr = String.format("다행히 이득이다! %+.0f %s", diff, reverseCoin.name());
+            log(logStr);
+        } else {
+            String logStr = String.format("아쉽게도 손해다... %+.0f %s", diff, reverseCoin.name());
+            log(logStr);
         }
     }
 
@@ -242,7 +251,7 @@ public class ArbitrageTradeV2 implements Runnable {
         boolean isSuccess = false;
         Exception finalException = null;
 
-        for (int trial = 0; trial < TRIAL; trial++) {
+        for (int trial = 0; trial < maxWaitingSec; trial++) {
             try {
                 exchange.cancelOrder(orderId, orderType, coin, price, quantity);
                 isSuccess = true;

@@ -93,7 +93,7 @@ public class Config {
                 coin = Coin.valueOf(coinStr);
             }
             catch (Exception e) {
-                e.printStackTrace();
+                e.printStackTrace(System.out);
                 continue;
             }
             long diff = minDiff.getLong(coinStr);
@@ -117,6 +117,8 @@ public class Config {
         vo.setMinProfit(arbitrage.getLong("minProfit"));
         vo.setMinDiffMap(minDiffMap);
         vo.setTargetCoin(targetCoinArr);
+        vo.setMaxLoss(arbitrage.getLong("maxLoss"));
+        vo.setMaxWaitingSec(arbitrage.getLong("maxWaitingSec"));
 
         return vo;
     }

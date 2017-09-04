@@ -22,4 +22,6 @@ public class ArbitrageConfigVO {
     private long minProfit;
     private Map<Coin, Long> minDiffMap;
     private List<Coin> targetCoin;
+    private long maxLoss;
+    private long maxWaitingSec;
 }

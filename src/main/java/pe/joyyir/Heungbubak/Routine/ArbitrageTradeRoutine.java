@@ -16,8 +16,15 @@ public class ArbitrageTradeRoutine implements Routine{
     private StringBuilder sb = new StringBuilder();
     private EmailSender emailSender = null;
 
+    private long minProfit;
+
     public ArbitrageTradeRoutine(EmailSender emailSender) throws Exception {
         this.emailSender = emailSender;
+
+        ArbitrageConfigVO configVo = Config.getArbitrageConfig();
+        this.minProfit = configVo.getMinProfit();
+        if(minProfit < 1000)
+            minProfit = 1000;
     }
 
     @Override
@@ -25,16 +32,13 @@ public class ArbitrageTradeRoutine implements Routine{
         try {
             ArbitrageConfigVO arbitrageConfigVO = Config.getArbitrageConfig();
             List<Coin> targetCoinArr = arbitrageConfigVO.getTargetCoin();
-            long minProfit = arbitrageConfigVO.getMinProfit();
-            if(minProfit < 1000)
-                minProfit = 1000;
 
             for(int i = 0; i < targetCoinArr.size(); i++) {
                 final Coin coin = targetCoinArr.get(i);
                 long minDiff = arbitrageConfigVO.getMinDiffMap().get(coin);
                 if(minDiff < 0)
                     minDiff = 0;
-                makeMoney(coin, minDiff, minProfit);
+                makeMoney(coin, minDiff);
 
                 if(emailSender.isReady()) {
                     emailSender.setString("ArbitrageTrade", sb.toString());
@@ -49,7 +53,7 @@ public class ArbitrageTradeRoutine implements Routine{
         }
     }
 
-    public void makeMoney(final Coin coin, final long minDiff, final long minProfit) throws Exception {
+    public void makeMoney(final Coin coin, final long minDiff) throws Exception {
         final boolean DEBUG = true;
         String sellExchangeName = "", buyExchangeName = "";
         ArbitrageExchange bithumb = new BithumbService();

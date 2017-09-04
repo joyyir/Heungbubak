@@ -41,3 +41,5 @@ task copyResources(type: Copy) {
     from 'src/main/resources'
     into 'build/libs/resources'
 }
+
+compileJava.options.encoding = 'UTF-8'
