@@ -119,6 +119,7 @@ public class Config {
         vo.setTargetCoin(targetCoinArr);
         vo.setMaxLoss(arbitrage.getLong("maxLoss"));
         vo.setMaxWaitingSec(arbitrage.getLong("maxWaitingSec"));
+        vo.setReverseDiffXRP(arbitrage.getLong("reverseDiffXRP"));
 
         return vo;
     }

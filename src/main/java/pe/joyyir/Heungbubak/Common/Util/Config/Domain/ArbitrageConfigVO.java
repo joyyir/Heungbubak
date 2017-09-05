@@ -24,4 +24,5 @@ public class ArbitrageConfigVO {
     private List<Coin> targetCoin;
     private long maxLoss;
     private long maxWaitingSec;
+    private long reverseDiffXRP;
 }

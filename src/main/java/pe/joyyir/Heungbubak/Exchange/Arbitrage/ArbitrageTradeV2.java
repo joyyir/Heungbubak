@@ -45,8 +45,9 @@ public class ArbitrageTradeV2 implements Runnable {
     private ArbitrageSharedResource sharedResource;
     private ArbitrageSharedResource.SharedResource myResource;
 
-    private long maxLoss;
+    //private long maxLoss;
     private long maxWaitingSec;
+    private long reverseDiffXRP;
 
     // Custom setter & getter - start
     public void setTradeStatus(TradeStatus status) {
@@ -116,8 +117,9 @@ public class ArbitrageTradeV2 implements Runnable {
         this.myResource = sharedResource.getResource(orderType);
 
         ArbitrageConfigVO configVo = Config.getArbitrageConfig();
-        this.maxLoss = configVo.getMaxLoss();
+        //this.maxLoss = configVo.getMaxLoss();
         this.maxWaitingSec = configVo.getMaxWaitingSec();
+        this.reverseDiffXRP = configVo.getReverseDiffXRP();
     }
 
     // Trade - start
@@ -164,19 +166,33 @@ public class ArbitrageTradeV2 implements Runnable {
             double tradeQuantity;
             OrderType reversedOrderType = (orderType == OrderType.BUY) ? OrderType.SELL : OrderType.BUY;
             PriceType reversedPriceType = (orderType == OrderType.BUY) ? PriceType.BUY : PriceType.SELL;
+            double afterCoinBalance = exchange.getBalance(coin);
+            double afterKrwBalance = exchange.getBalance(Coin.KRW);
             if (orderType == OrderType.BUY) {
-                double afterCoinBalance = exchange.getBalance(coin);
                 tradeQuantity = afterCoinBalance - beforeCoinBalance;
             } else { // OrderType.SELL
-                double afterKrwBalance = exchange.getBalance(Coin.KRW);
                 tradeQuantity = exchange.getAvailableBuyQuantity(coin, (long) (afterKrwBalance - beforeKrwBalance));
             }
             ArbitrageMarketPrice marketPrice = exchange.getArbitrageMarketPrice(coin, reversedPriceType, tradeQuantity);
             long currentPrice = marketPrice.getMaximinimumPrice();
+
+            // 역거래 성공률을 높이기 위한 조치
+            if (coin == Coin.XRP) {
+                if (orderType == OrderType.BUY) {
+                    currentPrice -= this.reverseDiffXRP; // 더 저렴하게 판매
+                } else { // orderType == OrderType.SELL
+                    currentPrice += this.reverseDiffXRP; // 더 비싸게 구매
+                    tradeQuantity = (afterKrwBalance - beforeKrwBalance) / currentPrice;
+                }
+            }
+
+            /*
             double loss = (price-currentPrice) * tradeQuantity * (orderType == OrderType.BUY ? 1 : -1);
             if (loss > maxLoss) {
                 throw new Exception("예상 손실액이 최대 손실 기준액을 넘었습니다. 역거래를 진행하지 않았습니다. (예상 손실액: " + loss + ")");
             }
+            */
+
             String orderId = exchange.makeOrder(reversedOrderType, coin, currentPrice, tradeQuantity);
             waitOrderCompleted(orderId, reversedOrderType, coin);
         } catch (Exception e) {
@@ -266,14 +282,6 @@ public class ArbitrageTradeV2 implements Runnable {
         }
 
         if(!isSuccess) {
-            try {
-                // 한번 더 거래 성사 확인
-                if (exchange.isOrderCompleted(orderId, orderType, coin)) {
-                    finalException = new Exception("그 사이에 거래가 성사됨");
-                }
-            }
-            catch (Exception e) { }
-
             throw new Exception("거래 취소 실패 " + ((finalException == null) ? "" : finalException));
         }
     }
