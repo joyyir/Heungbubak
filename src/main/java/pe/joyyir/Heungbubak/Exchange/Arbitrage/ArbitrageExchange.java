@@ -14,4 +14,5 @@ public interface ArbitrageExchange {
     boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception;
     void cancelOrder(String orderId, OrderType orderType, Coin coin, long krwPrice, double quantity) throws Exception;
     JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception;
+    boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception;
 }

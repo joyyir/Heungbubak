@@ -59,6 +59,16 @@ public class DummyTrade implements ArbitrageExchange {
     }
 
     @Override
+    public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
+        Random random = new Random();
+        Thread.sleep(random.nextInt(MAX_WAIT_TIME));
+        int number = random.nextInt(100);
+        if(number < FAILURE_RATE)
+            throw new Exception("isOrderExist 오류");
+        return (number % 2 == 1) ? true : false;
+    }
+
+    @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         Random random = new Random();
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));

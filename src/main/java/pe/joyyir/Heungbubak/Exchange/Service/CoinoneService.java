@@ -205,10 +205,8 @@ public class CoinoneService implements ArbitrageExchange {
         String url = "";
         if(orderType == OrderType.BUY)
             url = "v2/order/limit_buy/";
-        else if(orderType == OrderType.SELL)
+        else // orderType == OrderType.SELL
             url = "v2/order/limit_sell/";
-        else
-            throw new Exception("Undefined OrderType");
 
         url = API_URL + url;
 
@@ -253,6 +251,23 @@ public class CoinoneService implements ArbitrageExchange {
     }
 
     @Override
+    public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
+        try {
+            getOrderInfo(orderId, coin);
+            return true;
+        }
+        catch (ErrorCodeException e) {
+            if ("104".equals(e.getErrorCode())) {
+                return false;
+            }
+            throw e;
+        }
+        catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Override
     public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
         return getOrderInfo(orderId, coin);
     }
@@ -273,7 +288,18 @@ public class CoinoneService implements ArbitrageExchange {
     }
 
     private void errorCheck(JSONObject result) throws Exception {
-        if(!"success".equals(result.getString("result")))
-            throw new Exception(errorDescription(result.getString("errorCode")));
+        if(!"success".equals(result.getString("result"))) {
+            String errorCode = result.getString("errorCode");
+            throw new ErrorCodeException(errorCode, errorDescription(errorCode));
+        }
+    }
+
+    private class ErrorCodeException extends Exception {
+        @Getter
+        private String errorCode;
+        public ErrorCodeException(String errorCode, String msg) {
+            super(msg);
+            this.errorCode = errorCode;
+        }
     }
 }

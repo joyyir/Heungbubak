@@ -6,6 +6,7 @@ import pe.joyyir.Heungbubak.Common.Const.Coin;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Exchange.Service.BithumbService;
+import pe.joyyir.Heungbubak.Exchange.Service.CoinoneService;
 
 import static org.junit.Assert.*;
 
@@ -56,14 +57,14 @@ public class ArbitrageExchangeTest {
 
     @Test
     public void makeOrder() throws Exception {
-        OrderType orderType = OrderType.SELL;
-        long krwPrice = 380;
+        OrderType orderType = OrderType.BUY;
+        long krwPrice = 200;
         double qty = 10;
         JSONObject orderInfo;
         System.out.println("makeOrder:");
         String orderId = service.makeOrder(orderType, coin, krwPrice, qty);
         System.out.println("\torder made! (orderId)" + orderId);
-        orderInfo = service.getOrderInfo(orderId, coin, OrderType.SELL);
+        orderInfo = service.getOrderInfo(orderId, coin, orderType);
         System.out.println("\t(orderInfo)" + orderInfo.toString(4));
         if (service.isOrderCompleted(orderId, orderType, coin)) {
             System.out.println("\torder completed!");
@@ -87,6 +88,7 @@ public class ArbitrageExchangeTest {
 
     @Test
     public void isOrderCompleted() throws Exception {
+        assertTrue(service.isOrderCompleted("c726ca93-f165-4918-a107-a80a1b173837", OrderType.SELL, coin)); // Coinone
     }
 
     @Test

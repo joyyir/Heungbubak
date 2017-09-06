@@ -250,6 +250,12 @@ public class BithumbService implements ArbitrageExchange {
     }
 
     @Override
+    public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
+        // TODO : here
+        return false;
+    }
+
+    @Override
     public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
         final String ENDPOINT_FINISHED = "info/order_detail";
         final String ENDPOINT_IN_PROGRESS = "info/orders";
@@ -268,7 +274,10 @@ public class BithumbService implements ArbitrageExchange {
                 errorCheck(result, "getOrderInfo");
                 break;
             }
-            catch (Exception e) { }
+            catch (ErrorCodeException e) { }
+            catch (Exception e2) {
+                throw e2;
+            }
         }
         return result;
     }
@@ -283,6 +292,7 @@ public class BithumbService implements ArbitrageExchange {
     @Override
     public boolean isOrderCompleted(String orderId, OrderType orderType, Coin coin) throws Exception {
         JSONObject result = getOrderInfo(orderId, coin, orderType);
+        errorCheck(result, "isOrderCompleted");
         return isOrderCompleted(result);
     }
 
@@ -310,7 +320,7 @@ public class BithumbService implements ArbitrageExchange {
                 else if(message instanceof JSONObject)
                     customMsg = result.getJSONObject("message").getString("message");
             }
-            throw new Exception(funcName + " failed! (tradeStatus: " + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
+            throw new ErrorCodeException(status, funcName + " failed! (tradeStatus: " + (customMsg.equals("") ? statusDescription(status) : customMsg) + ")");
         }
     }
 
@@ -327,5 +337,14 @@ public class BithumbService implements ArbitrageExchange {
         }
 
         return desc;
+    }
+
+    private class ErrorCodeException extends Exception {
+        @Getter
+        private String status;
+        public ErrorCodeException(String status, String msg) {
+            super(msg);
+            this.status = status;
+        }
     }
 }
