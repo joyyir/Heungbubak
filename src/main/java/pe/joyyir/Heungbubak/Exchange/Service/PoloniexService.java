@@ -63,7 +63,7 @@ public class PoloniexService {
 
             JSONObject json = HTTPUtil.getJSONfromPost(API_URL + TRADING_URL, map, params);
 
-            //System.out.println(json.get("USDT")); // USDT¥¬ ¡¶ø‹µ 
+            //System.out.println(json.get("USDT")); // USDTÎäî Ï†úÏô∏Îê®
 
             for (int i = 0; i < json.names().length(); i++) {
                 String strCoin = json.names().getString(i);
@@ -82,9 +82,9 @@ public class PoloniexService {
     public static void main(String[] args){
         try {
             PoloniexService comm = new PoloniexService();
-            System.out.println("«ˆ¿Á USDT_BTC Ω√ºº: " + comm.getMarketPrice(Coin.USDT, Coin.BTC));
-            System.out.println("≥ª∞° º“¿Ø«— XRP: " + comm.getBalance(Coin.XRP));
-            System.out.println("√— ∫∏¿Ø ∞°ƒ° (BTC): " + comm.getCompleteBalance());
+            System.out.println("ÌòÑÏû¨ USDT_BTC ÏãúÏÑ∏: " + comm.getMarketPrice(Coin.USDT, Coin.BTC));
+            System.out.println("ÎÇ¥Í∞Ä ÏÜåÏú†Ìïú XRP: " + comm.getBalance(Coin.XRP));
+            System.out.println("Ï¥ù Î≥¥Ïú† Í∞ÄÏπò (BTC): " + comm.getCompleteBalance());
         }
         catch(Exception e){
             e.printStackTrace();
