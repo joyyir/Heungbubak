@@ -17,7 +17,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
         int number = random.nextInt(100);
         if(number < FAILURE_RATE)
-            throw new Exception("getMarketPrice ¿À·ù");
+            throw new Exception("getMarketPrice ì˜¤ë¥˜");
         return 1;
     }
 
@@ -27,7 +27,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
         int number = random.nextInt(100);
         if(number < FAILURE_RATE)
-            throw new Exception("getBalance ¿À·ù");
+            throw new Exception("getBalance ì˜¤ë¥˜");
         return 1;
     }
 
@@ -37,7 +37,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
         int number = random.nextInt(100);
         if(number < FAILURE_RATE)
-            throw new Exception("getArbitrageMarketPrice ¿À·ù");
+            throw new Exception("getArbitrageMarketPrice ì˜¤ë¥˜");
         return new ArbitrageMarketPrice(0, 0);
     }
 
@@ -54,7 +54,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
 //        int number = random.nextInt(100);
 //        if(number < FAILURE_RATE)
-//            throw new Exception("makeOrder ¿À·ù");
+//            throw new Exception("makeOrder ì˜¤ë¥˜");
         return "SUCCESS";
     }
 
@@ -64,7 +64,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
         int number = random.nextInt(100);
         if(number < FAILURE_RATE)
-            throw new Exception("isOrderCompleted ¿À·ù");
+            throw new Exception("isOrderCompleted ì˜¤ë¥˜");
         return (number % 2 == 1) ? true : false;
     }
 
@@ -74,7 +74,7 @@ public class DummyTrade implements ArbitrageExchange {
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
         int number = random.nextInt(100);
         if(number < FAILURE_RATE)
-            throw new Exception("cancelOrder ¿À·ù");
+            throw new Exception("cancelOrder ì˜¤ë¥˜");
     }
 
     @Override

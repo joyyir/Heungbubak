@@ -127,8 +127,9 @@ public class ArbitrageTradeV2 implements Runnable {
         synchronized (sharedResource) {
             try {
                 orderId = exchange.makeOrder(orderType, coin, price, quantity);
-                setTradeStatus(TradeStatus.ORDER_MADE);
                 log("거래 생성 완료");
+                setTradeStatus(TradeStatus.ORDER_MADE);
+                sharedResource.wait();
             }
             catch (Exception e) {
                 throw new Exception("거래 생성 실패 " + e);
@@ -144,8 +145,8 @@ public class ArbitrageTradeV2 implements Runnable {
             synchronized (sharedResource) {
                 try {
                     if (exchange.isOrderCompleted(orderId, orderType, coin)) {
-                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
                         log("거래 성공");
+                        setTradeStatus(TradeStatus.ORDER_COMPLETED);
                         isSuccess = true;
                         break;
                     }
@@ -236,8 +237,8 @@ public class ArbitrageTradeV2 implements Runnable {
                 case ORDER_MADE: // 거래 성사 실패
                     try {
                         cancelOrder();
-                        setTradeStatus(TradeStatus.ORDER_CANCELED);
                         log("거래 취소 완료");
+                        setTradeStatus(TradeStatus.ORDER_CANCELED);
                     }
                     catch (Exception e) {
                         log(e.getMessage());
