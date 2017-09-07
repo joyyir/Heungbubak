@@ -251,8 +251,19 @@ public class BithumbService implements ArbitrageExchange {
 
     @Override
     public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
-        // TODO : here
-        return false;
+        JSONObject orderInfo = getOrderInfo(orderId, coin, orderType);
+        String status = orderInfo.getString("status");
+        if (STATUS_CODE_SUCCESS.equals(status)) {
+            return true;
+        }
+        else if (STATUS_CODE_CUSTOM.equals(status)
+                && "거래 진행중인 내역이 존재하지 않습니다.".equals(orderInfo.getString("message"))) {
+            return false;
+        }
+        else {
+            errorCheck(orderInfo, "isOrderExist"); // 무조건 예외 발생
+            throw new Exception("This will never happen"); // 절대 일어나지 않음
+        }
     }
 
     @Override
