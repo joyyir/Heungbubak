@@ -140,8 +140,8 @@ public class ArbitrageTradeRoutine implements Routine{
         }
 
         // step 4. 실제 거래 가격 산정
-        ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty);
-        ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty);
+        ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty*1.5);
+        ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty*1.5);
         long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
         long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (내가 팔) 최소 판매가 (최악의 조건)
         long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (내가 살) 최대 구입가 (최악의 조건)
