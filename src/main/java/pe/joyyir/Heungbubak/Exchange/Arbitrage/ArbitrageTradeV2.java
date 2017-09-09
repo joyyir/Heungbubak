@@ -242,9 +242,21 @@ public class ArbitrageTradeV2 implements Runnable {
                     }
                     catch (Exception e) {
                         log(e.getMessage());
-                        setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
+                        try {
+                            if (exchange.isOrderExist(orderId, coin, orderType)) {
+                                setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
+                                oppositeTrade.setIsCancelRequired(true, "상대방의 거래 성사 실패");
+                            }
+                            else {
+                                log("거래가 존재하지 않음. 즉, 거래가 성공한 상태임");
+                                setTradeStatus(TradeStatus.ORDER_COMPLETED);
+                            }
+                        } catch (Exception e1) {
+                            log(e1.getMessage());
+                            setTradeStatus(TradeStatus.ORDER_CANCEL_FAILED);
+                            oppositeTrade.setIsCancelRequired(true, "상대방의 거래 성사 실패");
+                        }
                     }
-                    oppositeTrade.setIsCancelRequired(true, "상대방의 거래 성사 실패");
                     break;
                 case ORDER_COMPLETED:
                     try {
@@ -268,12 +280,14 @@ public class ArbitrageTradeV2 implements Runnable {
         boolean isSuccess = false;
         Exception finalException = null;
 
+        log("거래 취소 시도 시작");
         for (int trial = 0; trial < maxWaitingSec; trial++) {
             try {
                 exchange.cancelOrder(orderId, orderType, coin, price, quantity);
                 isSuccess = true;
                 break;
             } catch (Exception e) {
+                log("\t" + (trial+1) + "번째 시도 실패: " + e);
                 finalException = e;
             }
             try {
@@ -313,7 +327,8 @@ public class ArbitrageTradeV2 implements Runnable {
         // TradeStatus.ORDER_MADE
         if(isCancelRequired()) {
             cancelTrade();
-            return;
+            if (!getTradeStatus().equals(TradeStatus.ORDER_COMPLETED))
+                return;
         }
         try {
             waitOrderCompleted(orderId, orderType, coin);
@@ -321,7 +336,8 @@ public class ArbitrageTradeV2 implements Runnable {
         catch (Exception e) {
             log(e.getMessage());
             cancelTrade();
-            return;
+            if (!getTradeStatus().equals(TradeStatus.ORDER_COMPLETED))
+                return;
         }
 
         // TradeStatus.ORDER_COMPLETED

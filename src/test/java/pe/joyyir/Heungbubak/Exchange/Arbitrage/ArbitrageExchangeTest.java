@@ -19,7 +19,7 @@ public class ArbitrageExchangeTest {
 
     public ArbitrageExchangeTest() {
         try {
-            this.service = new BithumbService();
+            this.service = new CoinoneService();
             this.coin = Coin.XRP;
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,8 +57,8 @@ public class ArbitrageExchangeTest {
 
     @Test
     public void makeOrder() throws Exception {
-        OrderType orderType = OrderType.BUY;
-        long krwPrice = 200;
+        OrderType orderType = OrderType.SELL;
+        long krwPrice = 300;
         double qty = 10;
         JSONObject orderInfo;
         System.out.println("makeOrder:");
@@ -68,20 +68,29 @@ public class ArbitrageExchangeTest {
         System.out.println("\t(orderInfo)" + orderInfo.toString(4));
         if (service.isOrderCompleted(orderId, orderType, coin)) {
             System.out.println("\torder completed!");
+            assertTrue(false);
         }
         else {
             System.out.println("\torder not completed!");
+            assertTrue(true);
+        }
+        if (service.isOrderExist(orderId, coin, orderType)) {
+            System.out.println("\torder exist");
+            assertTrue(true);
+        }
+        else {
+            System.out.println("\torder not exist");
+            assertTrue(false);
         }
         Thread.sleep(3000);
         service.cancelOrder(orderId, orderType, coin, krwPrice, qty);
         System.out.println("\tcancel completed!");
-        try {
-            orderInfo = service.getOrderInfo(orderId, coin, orderType);
-            System.out.println("\t(orderInfo)" + orderInfo.toString(4));
+        if (service.isOrderExist(orderId, coin, orderType)) {
+            System.out.println("\torder exist");
             assertTrue(false);
         }
-        catch (Exception e) {
-            System.out.println("\t" + e.getMessage());
+        else {
+            System.out.println("\torder not exist");
             assertTrue(true);
         }
     }
