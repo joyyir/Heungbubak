@@ -253,11 +253,12 @@ public class BithumbService implements ArbitrageExchange {
     public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
         JSONObject orderInfo = getOrderInfo(orderId, coin, orderType);
         String status = orderInfo.getString("status");
+
         if (STATUS_CODE_SUCCESS.equals(status)) {
             return true;
         }
         else if (STATUS_CODE_CUSTOM.equals(status)
-                && "거래 진행중인 내역이 존재하지 않습니다.".equals(orderInfo.getString("message"))) {
+                && ("거래 진행중인 내역이 존재하지 않습니다.".equals(orderInfo.getString("message"))) || ("거래 체결내역이 존재하지 않습니다.".equals(orderInfo.getString("message"))) ) {
             return false;
         }
         else {
@@ -270,7 +271,7 @@ public class BithumbService implements ArbitrageExchange {
     public JSONObject getOrderInfo(String orderId, Coin coin, OrderType orderType) throws Exception {
         final String ENDPOINT_FINISHED = "info/order_detail";
         final String ENDPOINT_IN_PROGRESS = "info/orders";
-        final String[] ENDPOINTS = { ENDPOINT_FINISHED, ENDPOINT_IN_PROGRESS };
+        final String[] ENDPOINTS = { ENDPOINT_IN_PROGRESS, ENDPOINT_FINISHED };
         JSONObject result = null;
 
         for(String endpoint : ENDPOINTS) {

@@ -78,7 +78,7 @@ public class Config {
         return config.getLong("investment");
     }
 
-    public static ArbitrageConfigVO getArbitrageConfig() {
+    public static ArbitrageConfigVO getArbitrageConfig() throws Exception {
         ArbitrageConfigVO vo = new ArbitrageConfigVO();
         JSONObject arbitrage = config.getJSONObject("arbitrage");
         JSONObject minDiff = arbitrage.getJSONObject("minDiff");
@@ -120,6 +120,14 @@ public class Config {
         vo.setMaxLoss(arbitrage.getLong("maxLoss"));
         vo.setMaxWaitingSec(arbitrage.getLong("maxWaitingSec"));
         vo.setReverseDiffXRP(arbitrage.getLong("reverseDiffXRP"));
+        vo.setQtyMultiplyNum(arbitrage.getDouble("qtyMultiplyNum"));
+
+        if (vo.getMinProfit() < 1000)
+            throw new Exception("Too low minProfit: " + vo.getMinProfit());
+        if (vo.getReverseDiffXRP() > 5)
+            throw new Exception("Too high reverseDiffXRP: " + vo.getReverseDiffXRP());
+        if (vo.getQtyMultiplyNum() < 1)
+            throw new Exception("Too low qtyMultiplyNum: " + vo.getQtyMultiplyNum());
 
         return vo;
     }

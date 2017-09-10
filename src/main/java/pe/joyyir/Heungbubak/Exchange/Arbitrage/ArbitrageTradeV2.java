@@ -101,7 +101,7 @@ public class ArbitrageTradeV2 implements Runnable {
     }
 
     // Constructor
-    public ArbitrageTradeV2(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity, double beforeKrwBal, double beforeCoinBal, ArbitrageSharedResource sharedResource) {
+    public ArbitrageTradeV2(ArbitrageExchange exchange, OrderType orderType, Coin coin, long price, double quantity, double beforeKrwBal, double beforeCoinBal, ArbitrageSharedResource sharedResource) throws Exception {
         this.orderType = orderType;
         this.exchange = exchange;
         this.coin = coin;

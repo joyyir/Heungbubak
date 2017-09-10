@@ -25,4 +25,5 @@ public class ArbitrageConfigVO {
     private long maxLoss;
     private long maxWaitingSec;
     private long reverseDiffXRP;
+    private double qtyMultiplyNum;
 }

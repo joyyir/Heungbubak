@@ -19,7 +19,7 @@ public class ArbitrageExchangeTest {
 
     public ArbitrageExchangeTest() {
         try {
-            this.service = new CoinoneService();
+            this.service = new BithumbService();
             this.coin = Coin.XRP;
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,8 +57,8 @@ public class ArbitrageExchangeTest {
 
     @Test
     public void makeOrder() throws Exception {
-        OrderType orderType = OrderType.SELL;
-        long krwPrice = 300;
+        OrderType orderType = OrderType.BUY;
+        long krwPrice = 200;
         double qty = 10;
         JSONObject orderInfo;
         System.out.println("makeOrder:");
@@ -97,7 +97,7 @@ public class ArbitrageExchangeTest {
 
     @Test
     public void isOrderCompleted() throws Exception {
-        assertTrue(service.isOrderCompleted("c726ca93-f165-4918-a107-a80a1b173837", OrderType.SELL, coin)); // Coinone
+        //assertTrue(service.isOrderCompleted("c726ca93-f165-4918-a107-a80a1b173837", OrderType.SELL, coin)); // Coinone
     }
 
     @Test

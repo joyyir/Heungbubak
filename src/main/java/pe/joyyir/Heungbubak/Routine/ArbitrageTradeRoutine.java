@@ -17,14 +17,14 @@ public class ArbitrageTradeRoutine implements Routine{
     private EmailSender emailSender = null;
 
     private long minProfit;
+    private double qtyMultiplyNum;
 
     public ArbitrageTradeRoutine(EmailSender emailSender) throws Exception {
         this.emailSender = emailSender;
 
         ArbitrageConfigVO configVo = Config.getArbitrageConfig();
         this.minProfit = configVo.getMinProfit();
-        if(minProfit < 1000)
-            minProfit = 1000;
+        this.qtyMultiplyNum = configVo.getQtyMultiplyNum();
     }
 
     @Override
@@ -140,8 +140,8 @@ public class ArbitrageTradeRoutine implements Routine{
         }
 
         // step 4. 실제 거래 가격 산정
-        ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty*1.5);
-        ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty*1.5);
+        ArbitrageMarketPrice sellArbitPrice = sellExchange.getArbitrageMarketPrice(coin, PriceType.BUY, qty*qtyMultiplyNum);
+        ArbitrageMarketPrice buyArbitPrice = buyExchange.getArbitrageMarketPrice(coin, PriceType.SELL, qty*qtyMultiplyNum);
         long avgDiff = sellArbitPrice.getAveragePrice() - buyArbitPrice.getAveragePrice();
         long realSellPrice = sellArbitPrice.getMaximinimumPrice(); // (내가 팔) 최소 판매가 (최악의 조건)
         long realBuyPrice = buyArbitPrice.getMaximinimumPrice(); // (내가 살) 최대 구입가 (최악의 조건)
@@ -241,19 +241,19 @@ public class ArbitrageTradeRoutine implements Routine{
     }
 
     private void testTradeV2() {
-        ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
-        ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50, sharedResource);
-        ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50, sharedResource);
-        sellTrade.setOppositeTrade(buyTrade);
-        buyTrade.setOppositeTrade(sellTrade);
-        sellTrade.start();
-        buyTrade.start();
         try {
+            ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
+            ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.SELL, Coin.ETC, 100000, 100, 1000000, 50, sharedResource);
+            ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(new DummyTrade(), OrderType.BUY, Coin.ETC, 1000, 100, 1000000, 50, sharedResource);
+            sellTrade.setOppositeTrade(buyTrade);
+            buyTrade.setOppositeTrade(sellTrade);
+            sellTrade.start();
+            buyTrade.start();
             sellTrade.getThread().join();
             buyTrade.getThread().join();
         }
         catch (Exception e) {
-            System.out.println("join exception");
+            e.printStackTrace();
         }
     }
 
