@@ -239,6 +239,7 @@ public class ArbitrageTradeV2 implements Runnable {
                         cancelOrder();
                         log("거래 취소 완료");
                         setTradeStatus(TradeStatus.ORDER_CANCELED);
+                        oppositeTrade.setIsCancelRequired(true, "상대방의 거래 성사 실패");
                     }
                     catch (Exception e) {
                         log(e.getMessage());
