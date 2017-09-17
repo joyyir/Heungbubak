@@ -9,6 +9,7 @@ import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 
 import java.util.Date;
 
+@Deprecated
 public class ArbitrageTrade implements Runnable {
     // parameters
     final int TRIAL = 10;

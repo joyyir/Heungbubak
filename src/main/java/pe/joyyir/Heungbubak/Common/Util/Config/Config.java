@@ -66,8 +66,13 @@ public class Config {
         return config.getJSONObject("kakaoAPI");
     }
 
-    public static String getTargetEmail() {
-        return config.getString("targetEmail");
+    public static String[] getTargetEmail() {
+        JSONArray array = config.getJSONArray("targetEmail");
+        String[] emails = new String[array.length()];
+        for (int i = 0; i < array.length(); i++) {
+            emails[i] = array.getString(i);
+        }
+        return emails;
     }
 
     public static JSONArray getPreviousPrice() {

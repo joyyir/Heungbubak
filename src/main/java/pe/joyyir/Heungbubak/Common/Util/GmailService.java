@@ -52,13 +52,13 @@ public class GmailService {
     private static final List<String> SCOPES =
             Arrays.asList(GmailScopes.GMAIL_SEND);
 
-    private static String TARGET_EMAIL = null;
+    private static String[] TARGET_EMAILS = null;
 
     static {
         try {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
-            TARGET_EMAIL = Config.getTargetEmail();
+            TARGET_EMAILS = Config.getTargetEmail();
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);
@@ -174,8 +174,10 @@ public class GmailService {
     public static void sendEmail(String subject, String bodyText) throws MessagingException, IOException {
         Gmail service = getGmailService();
 
-        MimeMessage mimeMsg = createEmail(TARGET_EMAIL, "me", subject, bodyText);
-        sendMessage(service, "me", mimeMsg);
+        for (int i = 0; i < TARGET_EMAILS.length; i++) {
+            MimeMessage mimeMsg = createEmail(TARGET_EMAILS[i], "me", subject, bodyText);
+            sendMessage(service, "me", mimeMsg);
+        }
     }
 
     public static void main(String[] args) {

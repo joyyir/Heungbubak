@@ -191,6 +191,9 @@ public class CoinoneService implements ArbitrageExchange {
             case "107":
                 desc = "Parameter error";
                 break;
+            case "141":
+                desc = "Too many limit orders";
+                break;
             default:
                 desc = errorCode;
                 break;

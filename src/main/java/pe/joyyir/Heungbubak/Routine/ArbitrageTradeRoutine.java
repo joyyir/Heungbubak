@@ -180,6 +180,8 @@ public class ArbitrageTradeRoutine implements Routine{
         if (coin == Coin.XRP) {
             realSellPrice -= priceDiffXRP;
             realBuyPrice += priceDiffXRP;
+            realBuyQty = buyKrwBalance / realBuyPrice;
+            realSellQty = realBuyQty * 0.9985;
         }
 
         ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
