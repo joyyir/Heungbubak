@@ -18,6 +18,7 @@ public class ArbitrageTradeRoutine implements Routine{
 
     private long minProfit;
     private double qtyMultiplyNum;
+    private long priceDiffXRP;
 
     public ArbitrageTradeRoutine(EmailSender emailSender) throws Exception {
         this.emailSender = emailSender;
@@ -25,6 +26,7 @@ public class ArbitrageTradeRoutine implements Routine{
         ArbitrageConfigVO configVo = Config.getArbitrageConfig();
         this.minProfit = configVo.getMinProfit();
         this.qtyMultiplyNum = configVo.getQtyMultiplyNum();
+        this.priceDiffXRP = configVo.getPriceDiffXRP();
     }
 
     @Override
@@ -174,6 +176,12 @@ public class ArbitrageTradeRoutine implements Routine{
         // step 5. 거래 진행
         appendAndPrint("\nstep 5. 거래 진행\n");
         emailSender.setReady(true);
+
+        if (coin == Coin.XRP) {
+            realSellPrice -= priceDiffXRP;
+            realBuyPrice += priceDiffXRP;
+        }
+
         ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
         ArbitrageTradeV2 sellTrade = new ArbitrageTradeV2(sellExchange, OrderType.SELL, coin, realSellPrice, realSellQty, sellKrwBalance, sellCoinBalance, sharedResource);
         ArbitrageTradeV2 buyTrade = new ArbitrageTradeV2(buyExchange, OrderType.BUY, coin, realBuyPrice, realBuyQty, buyKrwBalance, buyCoinBalance, sharedResource);

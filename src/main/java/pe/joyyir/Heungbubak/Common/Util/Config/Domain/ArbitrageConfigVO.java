@@ -8,17 +8,6 @@ import java.util.Map;
 
 @Data
 public class ArbitrageConfigVO {
-    /*
-        "minProfit" : 1000,
-        "minDiff" : {
-          "BTC" : 20000,
-          "ETH" : 2000,
-          "ETC" : 100,
-          "XRP" : 1
-        },
-        "targetCoin" : [ "ETH", "ETC" ]
-     */
-
     private long minProfit;
     private Map<Coin, Long> minDiffMap;
     private List<Coin> targetCoin;
@@ -26,4 +15,5 @@ public class ArbitrageConfigVO {
     private long maxWaitingSec;
     private long reverseDiffXRP;
     private double qtyMultiplyNum;
+    private long priceDiffXRP;
 }

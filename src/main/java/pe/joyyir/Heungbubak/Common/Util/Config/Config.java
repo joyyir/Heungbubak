@@ -121,6 +121,7 @@ public class Config {
         vo.setMaxWaitingSec(arbitrage.getLong("maxWaitingSec"));
         vo.setReverseDiffXRP(arbitrage.getLong("reverseDiffXRP"));
         vo.setQtyMultiplyNum(arbitrage.getDouble("qtyMultiplyNum"));
+        vo.setPriceDiffXRP(arbitrage.getLong("priceDiffXRP"));
 
         if (vo.getMinProfit() < 1000)
             throw new Exception("Too low minProfit: " + vo.getMinProfit());
@@ -128,6 +129,8 @@ public class Config {
             throw new Exception("Too high reverseDiffXRP: " + vo.getReverseDiffXRP());
         if (vo.getQtyMultiplyNum() < 1)
             throw new Exception("Too low qtyMultiplyNum: " + vo.getQtyMultiplyNum());
+        if (vo.getPriceDiffXRP() > 10)
+            throw new Exception("Too high priceDiffXRP: " + vo.getPriceDiffXRP());
 
         return vo;
     }

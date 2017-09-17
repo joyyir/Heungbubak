@@ -261,7 +261,8 @@ public class ArbitrageTradeV2 implements Runnable {
                     break;
                 case ORDER_COMPLETED:
                     try {
-                        reverseOrder();
+                        //reverseOrder();
+                        log("이제 역거래는 진행하지 않음");
                         setTradeStatus(TradeStatus.ORDER_CANCELED);
                     }
                     catch (Exception e) {
