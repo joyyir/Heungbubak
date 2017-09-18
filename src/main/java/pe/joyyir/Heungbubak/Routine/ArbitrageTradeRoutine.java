@@ -182,6 +182,7 @@ public class ArbitrageTradeRoutine implements Routine{
             realBuyPrice += priceDiffXRP;
             realBuyQty = buyKrwBalance / realBuyPrice;
             realSellQty = realBuyQty * 0.9985;
+            appendAndPrint(String.format("\tXRP 거래이므로, priceDiffXRP(%d) 적용: 판매 %f개, 구매 %f개\n", priceDiffXRP, realSellQty, realBuyQty));
         }
 
         ArbitrageSharedResource sharedResource = new ArbitrageSharedResource();
