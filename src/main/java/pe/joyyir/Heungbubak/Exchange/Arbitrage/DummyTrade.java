@@ -12,6 +12,11 @@ public class DummyTrade implements ArbitrageExchange {
     private final int MAX_WAIT_TIME = 1000;
 
     @Override
+    public String getExchangeName() {
+        return "DummyExchange";
+    }
+
+    @Override
     public long getMarketPrice(Coin coin, PriceType priceType) throws Exception {
         Random random = new Random();
         Thread.sleep(random.nextInt(MAX_WAIT_TIME));
