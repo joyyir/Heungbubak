@@ -250,6 +250,11 @@ public class BithumbService implements ArbitrageExchange {
     }
 
     @Override
+    public String getExchangeName() {
+        return "Bithumb";
+    }
+
+    @Override
     public boolean isOrderExist(String orderId, Coin coin, OrderType orderType) throws Exception {
         JSONObject orderInfo = getOrderInfo(orderId, coin, orderType);
         String status = orderInfo.getString("status");

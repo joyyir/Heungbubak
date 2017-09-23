@@ -203,6 +203,11 @@ public class CoinoneService implements ArbitrageExchange {
     }
 
     @Override
+    public String getExchangeName() {
+        return "Coinone";
+    }
+
+    @Override
     public String makeOrder(OrderType orderType, Coin coin, long price, double quantity) throws Exception {
         long nonce = CmnUtil.nsTime();
         String url = "";

@@ -8,6 +8,7 @@ import pe.joyyir.Heungbubak.Common.Const.PriceType;
 import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import pe.joyyir.Heungbubak.Common.Util.Config.Domain.ArbitrageConfigVO;
+import pe.joyyir.Heungbubak.Common.Util.EmailSender;
 
 import java.util.Date;
 
@@ -124,16 +125,38 @@ public class ArbitrageTradeV2 implements Runnable {
 
     // Trade - start
     private void makeOrder() throws Exception {
-        synchronized (sharedResource) {
-            try {
-                orderId = exchange.makeOrder(orderType, coin, price, quantity);
-                log("거래 생성 완료");
-                setTradeStatus(TradeStatus.ORDER_MADE);
-                sharedResource.wait();
+        boolean isSuccess = false;
+        Exception finalException = null;
+        int count = 0;
+        EmailSender emailSender = new EmailSender("흥부박 오류 알림");
+
+        //for (int trial = 0; trial < maxWaitingSec; trial++) {
+        while (true) {
+            synchronized (sharedResource) {
+                try {
+                    orderId = exchange.makeOrder(orderType, coin, price, quantity);
+                    log("거래 생성 완료");
+                    setTradeStatus(TradeStatus.ORDER_MADE);
+                    sharedResource.wait();
+                    isSuccess = true;
+                    break;
+                } catch (Exception e) {
+                    finalException = e;
+                }
+                try {
+                    count++;
+                    if (count % 1000 == 0) {
+                        emailSender.setStringAndReady("", exchange.getExchangeName() + "에서 거래 생성 " + count + "번째 실패... 확인 필요");
+                        emailSender.sendEmail();
+                    }
+                    Thread.sleep(TRIAL_TIME_INTERVAL);
+                }
+                catch (Exception e) {}
             }
-            catch (Exception e) {
-                throw new Exception("거래 생성 실패 " + e);
-            }
+        }
+
+        if (!isSuccess) {
+            throw new Exception("거래 생성 실패 " + ((finalException == null) ? "" : finalException));
         }
     }
 
@@ -150,11 +173,14 @@ public class ArbitrageTradeV2 implements Runnable {
                         isSuccess = true;
                         break;
                     }
-                    Thread.sleep(TRIAL_TIME_INTERVAL);
                 } catch (Exception e) {
                     finalException = e;
                 }
             }
+            try {
+                Thread.sleep(TRIAL_TIME_INTERVAL);
+            }
+            catch (InterruptedException e) {}
         }
 
         if (!isSuccess) {
@@ -289,7 +315,7 @@ public class ArbitrageTradeV2 implements Runnable {
                 isSuccess = true;
                 break;
             } catch (Exception e) {
-                log("\t" + (trial+1) + "번째 시도 실패: " + e);
+                //log("\t" + (trial+1) + "번째 시도 실패: " + e);
                 finalException = e;
             }
             try {
