@@ -1,6 +1,5 @@
 package pe.joyyir.Heungbubak.Exchange.Service;
 
-import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Common.Util.CsvUtil;
 import pe.joyyir.Heungbubak.Common.Util.IOUtil;
 import pe.joyyir.Heungbubak.Exchange.DAO.CoinmarketcapDAO;
@@ -15,7 +14,8 @@ public class CoinmarketcapService {
     private CoinmarketcapDAO dao = new CoinmarketcapDAO();
 
     public void doSomething() {
-        final String FILE_PATH = "/Users/1003880/Desktop/result" + new SimpleDateFormat("yyyyMMddHH24mmss").format(Calendar.getInstance().getTime())+ ".csv";
+        final String LOAD_FILE_PATH = "/Users/1003880/Desktop/source.csv";
+        final String SAVE_FILE_PATH = "/Users/1003880/Desktop/result_" + new SimpleDateFormat("yyyyMMddHH24mmss").format(Calendar.getInstance().getTime())+ ".csv";
         final MyOrderHistoryVO[] historyArr = {
             new MyOrderHistoryVO("Digibyte", "11/26/2017 03:12:53 PM"),
             new MyOrderHistoryVO("Metal", "11/26/2017 02:58:00 PM"),
@@ -31,20 +31,22 @@ public class CoinmarketcapService {
             new MyOrderHistoryVO("Gulden", "11/26/2017 02:59:37 PM"),
             new MyOrderHistoryVO("adToken", "11/26/2017 03:06:43 PM"),
             new MyOrderHistoryVO("GeoCoin", "11/26/2017 02:54:08 PM"),
-            new MyOrderHistoryVO("SingularDTV", "11/26/2017 03:03:21 PM"),
+            new MyOrderHistoryVO("SingularDTV", "11/28/2017 08:12:33 AM"),
             new MyOrderHistoryVO("Elastic", "11/26/2017 03:10:09 PM"),
             new MyOrderHistoryVO("FirstBlood", "11/26/2017 03:15:58 PM")
         };
 
         try {
-            List<MyOrderHistoryVO> changeList = getChangeList(historyArr);
-            saveChangeListAsCsv(FILE_PATH, changeList);
+            List<MyOrderHistoryVO> historyList = (List<MyOrderHistoryVO>) loadCsvAsObjectList(LOAD_FILE_PATH, MyOrderHistoryVO.class);
+            List<MyOrderHistoryVO> changeList = getChangeList(historyList);
+            //List<MyOrderHistoryVO> changeList = getChangeList(Arrays.asList(historyArr)); // hard-coded
+            saveObjectListAsCsv(SAVE_FILE_PATH, changeList);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public List<MyOrderHistoryVO> getChangeList(MyOrderHistoryVO[] historyArr) {
+    public List<MyOrderHistoryVO> getChangeList(List<MyOrderHistoryVO> historyArr) {
         List<MyOrderHistoryVO> changeList = new ArrayList<>();
         for (MyOrderHistoryVO vo : historyArr) {
             MyOrderHistoryVO changeVO = getPriceChange(vo.getDateString(), vo.getCoin());
@@ -58,8 +60,12 @@ public class CoinmarketcapService {
         return changeList;
     }
 
-    private void saveChangeListAsCsv(String filepath, List<?> changeList) throws Exception {
+    private void saveObjectListAsCsv(String filepath, List<?> changeList) throws Exception {
         IOUtil.writeCsv(filepath, new CsvUtil().convertObjectListToSheet(changeList));
+    }
+
+    private List<?> loadCsvAsObjectList(String filepath, Class clazz) throws Exception {
+        return new CsvUtil().convertSheetToObjectList(IOUtil.readCsv(filepath), clazz);
     }
 
     public MyOrderHistoryVO getPriceChange(String formattedDate, String coinName) {
