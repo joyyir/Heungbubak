@@ -60,11 +60,11 @@ public class CoinmarketcapService {
         return changeList;
     }
 
-    private void saveObjectListAsCsv(String filepath, List<?> changeList) throws Exception {
+    public void saveObjectListAsCsv(String filepath, List<?> changeList) throws Exception {
         IOUtil.writeCsv(filepath, new CsvUtil().convertObjectListToSheet(changeList));
     }
 
-    private List<?> loadCsvAsObjectList(String filepath, Class clazz) throws Exception {
+    public List<?> loadCsvAsObjectList(String filepath, Class clazz) throws Exception {
         return new CsvUtil().convertSheetToObjectList(IOUtil.readCsv(filepath), clazz);
     }
 
@@ -123,6 +123,14 @@ public class CoinmarketcapService {
         }
 
         return vo;
+    }
+
+    public String getCoinFullName(String shortname) throws Exception {
+        return dao.getCoinFullName(shortname);
+    }
+
+    public String getCoinShortName(String fullname) throws Exception {
+        return dao.getCoinShortName(fullname);
     }
 
     public static void main(String[] args) {

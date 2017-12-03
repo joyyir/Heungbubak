@@ -1,6 +1,7 @@
 package pe.joyyir.Heungbubak.Exchange.Service;
 
 import pe.joyyir.Heungbubak.Exchange.DAO.BittrexDAO;
+import pe.joyyir.Heungbubak.Exchange.Domain.BittrexOrderVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexTickerVO;
 
 import java.util.*;
@@ -50,5 +51,32 @@ public class BittrexService {
         }
 
         return list;
+    }
+
+    // baseCoin : BTC, ETH, USDT
+    // OrderType : LIMIT_SELL, LIMIT_BUY
+    public Map<String, List<BittrexOrderVO>> getOpenOrder(String baseCoin, String OrderType) throws Exception {
+        Map<String, List<BittrexOrderVO>> map = new HashMap<>();
+        List<BittrexOrderVO> openOrderList = dao.getOpenOrders();
+        for (BittrexOrderVO vo : openOrderList) {
+            String[] coinArr = vo.getExchange().split("-");
+            if (baseCoin.equals(coinArr[0]) && OrderType.equals(vo.getOrderType())) {
+                List<BittrexOrderVO> list = map.get(coinArr[1]);
+                if (list == null) {
+                    list = new ArrayList<>();
+                    map.put(coinArr[1], list);
+                }
+                list.add(vo);
+            }
+        }
+        return map;
+    }
+
+    public static void main(String[] args) {
+        try {
+            new BittrexService().getOpenOrder("BTC", "LIMIT_SELL");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

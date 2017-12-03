@@ -2,7 +2,10 @@ package pe.joyyir.Heungbubak.Exchange.DAO;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import pe.joyyir.Heungbubak.Common.Util.Config.Config;
 import pe.joyyir.Heungbubak.Common.Util.HTTPUtil;
+import pe.joyyir.Heungbubak.Common.Util.IOUtil;
+import pe.joyyir.Heungbubak.Exchange.Domain.BittrexOrderVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexTickerVO;
 
 import java.util.ArrayList;
@@ -39,5 +42,33 @@ public class BittrexDAO {
         }
 
         return list;
+    }
+
+    public List<BittrexOrderVO> getOpenOrders() throws Exception {
+        List<BittrexOrderVO> openOrderList = new ArrayList<>();
+        final String filename = "bittrexOpenOrder.json";
+        JSONObject response = IOUtil.readJson(Config.getResourcePath(filename));
+        JSONArray result = response.getJSONArray("result");
+        for (int i = 0; i < result.length(); i++) {
+            JSONObject obj = result.getJSONObject(i);
+            BittrexOrderVO vo = new BittrexOrderVO();
+            vo.setExchange(obj.getString("Exchange"));
+            vo.setOrderType(obj.getString("OrderType"));
+            vo.setUuid(obj.getString("Uuid"));
+            vo.setOrderUuid(obj.getString("OrderUuid"));
+            vo.setId(obj.getLong("Id"));
+            vo.setLimit(obj.getDouble("Limit"));
+            vo.setQuantity(obj.getDouble("Quantity"));
+            openOrderList.add(vo);
+        }
+        return openOrderList;
+    }
+
+    public static void main(String[] args) {
+        try {
+            new BittrexDAO().getOpenOrders();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
