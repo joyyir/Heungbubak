@@ -103,6 +103,7 @@ public class CoinmarketcapService {
             vo.setNewBtcPrice15(newBtcPriceArr[0]);
             vo.setNewBtcPrice25(newBtcPriceArr[1]);
             vo.setNewBtcPrice40(newBtcPriceArr[2]);
+            vo.setUpdateSuccess("");
 
             System.out.println("------------------------------");
             System.out.println(coinName);

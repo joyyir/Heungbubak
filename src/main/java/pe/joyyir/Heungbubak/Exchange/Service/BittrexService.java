@@ -1,5 +1,6 @@
 package pe.joyyir.Heungbubak.Exchange.Service;
 
+import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Exchange.DAO.BittrexDAO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexOrderVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexTickerVO;
@@ -9,7 +10,7 @@ import java.util.*;
 public class BittrexService {
     private BittrexDAO dao;
 
-    public BittrexService() {
+    public BittrexService() throws Exception {
         this.dao = new BittrexDAO();
     }
 
@@ -57,7 +58,7 @@ public class BittrexService {
     // OrderType : LIMIT_SELL, LIMIT_BUY
     public Map<String, List<BittrexOrderVO>> getOpenOrder(String baseCoin, String OrderType) throws Exception {
         Map<String, List<BittrexOrderVO>> map = new HashMap<>();
-        List<BittrexOrderVO> openOrderList = dao.getOpenOrders();
+        List<BittrexOrderVO> openOrderList = dao.getOpenOrdersV2();
         for (BittrexOrderVO vo : openOrderList) {
             String[] coinArr = vo.getExchange().split("-");
             if (baseCoin.equals(coinArr[0]) && OrderType.equals(vo.getOrderType())) {
@@ -74,9 +75,19 @@ public class BittrexService {
 
     public static void main(String[] args) {
         try {
-            new BittrexService().getOpenOrder("BTC", "LIMIT_SELL");
+            //new BittrexService().getOpenOrder("BTC", "LIMIT_SELL");
+            //new BittrexService().cancelOrder("c812ccb2-48ef-4226-a2ad-a5b2cfeaf272");
+            //new BittrexService().makeOrder(OrderType.SELL, "USDT", "BTC", 50000, 0.01);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void cancelOrder(String orderUuid) throws Exception {
+        dao.cancelOrder(orderUuid);
+    }
+
+    public void makeOrder(OrderType orderType, String baseCoin, String coin, double price, double quantity) throws Exception {
+        dao.makeOrder(orderType, baseCoin, coin, price, quantity);
     }
 }

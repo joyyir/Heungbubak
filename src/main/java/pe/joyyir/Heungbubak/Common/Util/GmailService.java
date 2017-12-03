@@ -72,7 +72,7 @@ public class GmailService {
      */
     public static Credential authorize() throws IOException {
         // Load client secrets.
-        InputStream in = new FileInputStream(Config.getResourcePath("client_secret.json"));
+        InputStream in = new FileInputStream(Config.getResourcePath("apiKeyGmail.json"));
         GoogleClientSecrets clientSecrets =
                 GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 

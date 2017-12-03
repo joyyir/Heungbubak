@@ -54,6 +54,8 @@ public class Config {
 
     public static String getApikeyPathBithumb() { return getResourcePath(config.getString("apikeyPathBithumb")); }
 
+    public static String getApikeyPathBittrex() { return getResourcePath(config.getString("apikeyPathBittrex")); }
+
     public static String getApikeyPathKakao() {
         return getResourcePath(config.getString("apikeyPathKakao"));
     }

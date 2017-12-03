@@ -15,6 +15,7 @@ public class MyOrderHistoryVO {
     private double newBtcPrice15;
     private double newBtcPrice25;
     private double newBtcPrice40;
+    private String updateSuccess;
 
     public MyOrderHistoryVO() {}
     public MyOrderHistoryVO(String coin, String dateString) {

@@ -20,14 +20,14 @@ public class CoinmarketcapDAO {
         if (coinMapShortToFull == null ) {
             initailizeCoinMap();
         }
-        return coinMapShortToFull.get(shortname);
+        return coinMapShortToFull.get(shortname.toLowerCase());
     }
 
     public String getCoinShortName(String fullname) throws Exception {
         if (coinMapFullToShort == null ) {
             initailizeCoinMap();
         }
-        return coinMapFullToShort.get(fullname);
+        return coinMapFullToShort.get(fullname.toLowerCase());
     }
 
     public void initailizeCoinMap() throws Exception {
@@ -37,8 +37,10 @@ public class CoinmarketcapDAO {
         JSONArray array = obj.getJSONArray("array");
         for (int i = 0; i < array.length(); i++) {
             JSONArray token = array.getJSONObject(i).getJSONArray("tokens");
-            coinMapShortToFull.put(token.getString(1), token.getString(0));
-            coinMapFullToShort.put(token.getString(0), token.getString(1));
+            String fullName = token.getString(0).toLowerCase();
+            String shortName = token.getString(1).toLowerCase();
+            coinMapShortToFull.put(shortName, fullName);
+            coinMapFullToShort.put(fullName, shortName);
         }
     }
 

@@ -1,5 +1,7 @@
 package pe.joyyir.Heungbubak.Routine;
 
+import pe.joyyir.Heungbubak.Common.Const.OrderType;
+import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexOrderVO;
 import pe.joyyir.Heungbubak.Exchange.Domain.MyOrderHistoryVO;
 import pe.joyyir.Heungbubak.Exchange.Service.BittrexService;
@@ -20,39 +22,41 @@ public class ReadjustmentRoutine implements Routine {
         final String LOAD_FILE_PATH = "/Users/1003880/Desktop/source.csv";
         final String SAVE_FILE_PATH = "/Users/1003880/Desktop/result_" + new SimpleDateFormat("yyyyMMddHH24mmss").format(Calendar.getInstance().getTime())+ ".csv";
 
-        BittrexService bittrex = new BittrexService();
-        CoinmarketcapService coinmarketcap = new CoinmarketcapService();
-
         try {
+            BittrexService bittrex = new BittrexService();
+            CoinmarketcapService coinmarketcap = new CoinmarketcapService();
+
             Map<String, List<BittrexOrderVO>> openOrderMap = bittrex.getOpenOrder("BTC", "LIMIT_SELL");
 
             List<MyOrderHistoryVO> historyList = (List<MyOrderHistoryVO>) coinmarketcap.loadCsvAsObjectList(LOAD_FILE_PATH, MyOrderHistoryVO.class);
             List<MyOrderHistoryVO> changeList = coinmarketcap.getChangeList(historyList);
-            coinmarketcap.saveObjectListAsCsv(SAVE_FILE_PATH, changeList);
-
-            openOrderMap.toString();
-            changeList.toString();
 
             for (MyOrderHistoryVO vo : changeList) {
-                String coinShortName = coinmarketcap.getCoinShortName(vo.getCoin());
+                String coinShortName = coinmarketcap.getCoinShortName(vo.getCoin()).toUpperCase();
                 List<BittrexOrderVO> openOrderList = openOrderMap.get(coinShortName);
-                double quantity = 0.0;
-                for (BittrexOrderVO orderVO : openOrderList) {
-                    quantity += orderVO.getQuantity();
-                }
-                for (BittrexOrderVO orderVO : openOrderList) {
-                    // TODO
-                    //bittrex.cancelOrder(orderVO.getOrderUuid());
-                }
-                double newPrice15 = vo.getNewBtcPrice15();
-                double newPrice25 = vo.getNewBtcPrice25();
-                double newPrice40 = vo.getNewBtcPrice40();
+                if (CmnUtil.isNotEmpty(openOrderList)) {
+                    double quantity = 0.0;
+                    for (BittrexOrderVO orderVO : openOrderList) {
+                        quantity += orderVO.getQuantity();
+                    }
+                    for (BittrexOrderVO orderVO : openOrderList) {
+                        bittrex.cancelOrder(orderVO.getOrderUuid());
+                    }
+                    double newPrice15 = vo.getNewBtcPrice15();
+                    double newPrice25 = vo.getNewBtcPrice25();
+                    double newPrice40 = vo.getNewBtcPrice40();
 
-                // TODO
-                // bittrex.makeOrder("LIMIT_SELL", quantity/3, newPrice15);
-                // bittrex.makeOrder("LIMIT_SELL", quantity/3, newPrice25);
-                // bittrex.makeOrder("LIMIT_SELL", quantity/3, newPrice40);
+                    double quantityOneThird = Math.floor((quantity / 3) * 100000000) / 100000000;
+
+                    bittrex.makeOrder(OrderType.SELL, "BTC", coinShortName.toUpperCase(), newPrice15, quantityOneThird);
+                    bittrex.makeOrder(OrderType.SELL, "BTC", coinShortName.toUpperCase(), newPrice25, quantityOneThird);
+                    bittrex.makeOrder(OrderType.SELL, "BTC", coinShortName.toUpperCase(), newPrice40, quantityOneThird);
+
+                    vo.setUpdateSuccess("Y");
+                }
             }
+
+            coinmarketcap.saveObjectListAsCsv(SAVE_FILE_PATH, changeList);
         } catch (Exception e) {
             e.printStackTrace();
         }

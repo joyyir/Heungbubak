@@ -6,9 +6,7 @@ import lombok.Data;
 public class BittrexOrderVO {
     String exchange;
     String orderType;
-    String uuid;
     String orderUuid;
-    Long id;
     Double limit; // bid/ask
     Double quantity;
 }

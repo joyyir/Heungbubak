@@ -12,7 +12,12 @@ public class CandidateCoinRoutine implements Routine {
     }
 
     private List<String> getCondidiateCoinList() {
-        BittrexService service = new BittrexService();
+        BittrexService service = null;
+        try {
+            service = new BittrexService();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // 후보에서 제외할 코인
         final String[] exclude = {
