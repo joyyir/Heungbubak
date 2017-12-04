@@ -37,7 +37,8 @@ public class CoinmarketcapDAO {
         JSONArray array = obj.getJSONArray("array");
         for (int i = 0; i < array.length(); i++) {
             JSONArray token = array.getJSONObject(i).getJSONArray("tokens");
-            String fullName = token.getString(0).toLowerCase();
+            String fullName = array.getJSONObject(i).getString("slug");
+            //String fullName = token.getString(0).toLowerCase();
             String shortName = token.getString(1).toLowerCase();
             coinMapShortToFull.put(shortName, fullName);
             coinMapFullToShort.put(fullName, shortName);

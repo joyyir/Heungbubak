@@ -73,7 +73,7 @@ public class CoinmarketcapService {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss a", Locale.US);
             Date date = sdf.parse(formattedDate);
-            String modifiedCoinName = coinName.toLowerCase().replace(" ", "-");
+            String modifiedCoinName = dao.getCoinFullName(coinName);
             CoinmarketcapGraphCurrencyVO coinBeforeVO = dao.graphCurrency(modifiedCoinName, date);
             CoinmarketcapGraphCurrencyVO coinAfterVO = dao.graphCurrency(modifiedCoinName, Calendar.getInstance().getTime());
             CoinmarketcapGraphCurrencyVO btcBeforeVO = dao.graphCurrency("bitcoin", date);
