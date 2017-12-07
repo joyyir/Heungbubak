@@ -60,8 +60,10 @@ public class ReadjustmentRoutine implements Routine {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    vo.setUpdateSuccess("ERROR");
+                    vo.setUpdateSuccess("ERROR: " + e.getMessage());
                 }
+
+                System.out.println(vo.getCoin() + ": " + vo.getUpdateSuccess());
             }
 
             coinmarketcap.saveObjectListAsCsv(SAVE_FILE_PATH, changeList);
