@@ -33,7 +33,7 @@ public class ReadjustmentRoutine implements Routine {
 
             for (MyOrderHistoryVO vo : changeList) {
                 try {
-                    String coinShortName = coinmarketcap.getCoinShortName(vo.getCoin()).toUpperCase();
+                    String coinShortName = vo.getCoin().toUpperCase();
                     List<BittrexOrderVO> openOrderList = openOrderMap.get(coinShortName);
                     if (CmnUtil.isNotEmpty(openOrderList)) {
                         double quantity = 0.0;
@@ -55,7 +55,11 @@ public class ReadjustmentRoutine implements Routine {
 
                         vo.setUpdateSuccess("Y");
                     }
+                    else {
+                        vo.setUpdateSuccess("NO OPEN ORDERS");
+                    }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     vo.setUpdateSuccess("ERROR");
                 }
             }
