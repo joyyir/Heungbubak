@@ -3,12 +3,8 @@ package pe.joyyir.Heungbubak.Routine;
 import pe.joyyir.Heungbubak.Common.Const.OrderType;
 import pe.joyyir.Heungbubak.Common.Util.CmnUtil;
 import pe.joyyir.Heungbubak.Exchange.Domain.BittrexOrderVO;
-import pe.joyyir.Heungbubak.Exchange.Domain.MyOrderHistoryVO;
 import pe.joyyir.Heungbubak.Exchange.Service.BittrexService;
-import pe.joyyir.Heungbubak.Exchange.Service.CoinmarketcapService;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +26,8 @@ public class MakeSellReservationRoutine implements Routine {
 //        makeSellReservation("DNT", 0.00000289);
 //        makeSellReservation("CVC", 0.00001957);
 //        makeSellReservation("SNGLS", 0.00000778);
+//        makeSellReservation("GBYTE", 0.01527190);
+        makeSellReservation("CPC", 0.00002469);
 
     }
 
